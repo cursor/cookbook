@@ -4,6 +4,7 @@ import {
   FormEvent,
   type MouseEvent as ReactMouseEvent,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -220,26 +221,20 @@ const fallbackModels: ModelCatalogItem[] = [
 const fallbackModelSelection = encodeModelSelection({ id: fallbackModels[0].id })
 
 export function AppBuilder() {
-  const [initialAppState] = useState(readPersistedAppState)
-  const [conversations, setConversations] = useState(
-    initialAppState.conversations
-  )
+  const [bootstrap] = useState(createInitialAppState)
+  const [conversations, setConversations] = useState(bootstrap.conversations)
   const [activeConversationId, setActiveConversationId] = useState(
-    initialAppState.activeConversationId
+    bootstrap.activeConversationId
   )
   const [apiKey, setApiKey] = useState("")
   const [hasSavedApiKey, setHasSavedApiKey] = useState(false)
   const [runtimeByConversationId, setRuntimeByConversationId] = useState<
     Record<string, ConversationRuntimeState>
-  >(() => {
-    return {
-      [initialAppState.activeConversationId]: createRuntimeState(),
-    }
-  })
+  >(() => ({
+    [bootstrap.activeConversationId]: createRuntimeState(),
+  }))
   const [isProjectSidebarOpen, setIsProjectSidebarOpen] = useState(true)
-  const [isOnboardingOpen, setIsOnboardingOpen] = useState(
-    () => !isCursorApiKey(getSavedCursorApiKey() ?? "")
-  )
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(true)
   const [isApiKeySettingsOpen, setIsApiKeySettingsOpen] = useState(false)
   const [isApiKeyClearConfirming, setIsApiKeyClearConfirming] = useState(false)
   const [titleGenerationConversationIds, setTitleGenerationConversationIds] =
@@ -277,6 +272,24 @@ export function AppBuilder() {
     () => [...conversations].sort((a, b) => b.updatedAt - a.updatedAt),
     [conversations]
   )
+
+  useLayoutEffect(() => {
+    const persisted = readPersistedAppStateFromStorage()
+    setConversations(persisted.conversations)
+    setActiveConversationId(persisted.activeConversationId)
+    setRuntimeByConversationId(
+      Object.fromEntries(
+        persisted.conversations.map((conversation) => [
+          conversation.id,
+          createRuntimeState(),
+        ])
+      )
+    )
+    const savedKey = getSavedCursorApiKey()
+    if (savedKey && isCursorApiKey(savedKey)) {
+      setIsOnboardingOpen(false)
+    }
+  }, [])
 
   useEffect(() => {
     conversationsRef.current = conversations
@@ -4027,11 +4040,8 @@ function getProjectNameMessages(conversation: Conversation): ProjectNameMessage[
     : conversationContext
 }
 
-function readPersistedAppState(): PersistedAppState {
-  if (typeof window === "undefined") {
-    return createInitialAppState()
-  }
-
+/** Client-only: restores chats after SSR hydration so markup matches server on first paint. */
+function readPersistedAppStateFromStorage(): PersistedAppState {
   try {
     const raw = window.localStorage.getItem(SAVED_CHAT_STATE)
     if (!raw) {
