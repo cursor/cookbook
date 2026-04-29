@@ -203,7 +203,7 @@ function createPythonProject(cwd: string): ProjectInfo {
 }
 
 function detectPythonCommand() {
-  for (const command of ["python", "python3"]) {
+  for (const command of ["python3", "python"]) {
     try {
       execFileSync(command, ["--version"], {
         stdio: ["ignore", "ignore", "ignore"],
