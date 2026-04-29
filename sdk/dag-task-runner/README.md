@@ -8,7 +8,7 @@ Decompose a task into a JSON DAG, run each node as a Cursor SDK local subagent i
 
 ## What it does
 
-- **Authors a DAG** of subtasks with explicit `depends_on` edges and per-task `complexity` (HIGH / MED / LOW), which the runner maps to a Cursor model (`gpt-5.3-codex`, `composer-2`, `composer-2-fast`).
+- **Authors a DAG** of subtasks with explicit `depends_on` edges and per-task `complexity` (HIGH / MED / LOW), which the runner maps to Cursor models via configurable defaults.
 - **Topo-sorts** the DAG into ranks (Kahn's algorithm) and runs each rank concurrently with `Promise.all`, so independent work fans out automatically.
 - **Stitches upstream output** into each child's prompt — children get a 2,000-char snippet of every parent's result without you re-describing it.
 - **Streams live** to a `.canvas.tsx` file. Cursor recompiles the canvas on every write, so you see token-by-token output land in each task card.
@@ -68,6 +68,11 @@ Watch [`dag-example.canvas.tsx`](./examples/example_dag.json) refresh as each ra
 ```json
 {
   "title": "Build a tiny CLI todo app",
+  "models": {
+    "HIGH": "gpt-5.3-codex",
+    "MED": "composer-2",
+    "LOW": "composer-2-fast"
+  },
   "tasks": [
     {
       "id": "research-stack",
@@ -83,10 +88,39 @@ Watch [`dag-example.canvas.tsx`](./examples/example_dag.json) refresh as each ra
 |------------------|----------|-----------------------------------------------------------------------|
 | `id`             | yes      | Unique kebab-case identifier referenced by other tasks' `depends_on`. |
 | `depends_on`     | yes      | Array of `id`s. Empty for rank-1 tasks. Cycles rejected at parse.     |
-| `complexity`     | yes      | `HIGH` → `gpt-5.3-codex`, `MED` → `composer-2`, `LOW` → `composer-2-fast`. |
+| `complexity`     | yes      | `HIGH`, `MED`, or `LOW`. Resolved through the model map below.        |
 | `subtask_prompt` | yes      | Self-contained prompt — the runner prepends a summary of upstream output. |
+| `models`         | no       | Top-level partial complexity → model override map.                    |
 
 See [`examples/example_dag.json`](./examples/example_dag.json) for a worked example.
+
+## Complexity model map
+
+By default, complexities map to:
+
+| Complexity | Default model      |
+|------------|--------------------|
+| `HIGH`     | `gpt-5.3-codex`    |
+| `MED`      | `composer-2`       |
+| `LOW`      | `composer-2-fast`  |
+
+Override any subset inline in the DAG with a top-level `models` object, or keep reusable profiles in a JSON file:
+
+```json
+{
+  "HIGH": "gpt-5.3-codex",
+  "MED": "composer-2-fast",
+  "LOW": "composer-2-fast"
+}
+```
+
+Then run with:
+
+```bash
+pnpm dev -- --dag examples/example_dag.json --models-file ./models.fast.json --canvas-path "$PWD/.canvas/dag-example.canvas.tsx"
+```
+
+Precedence is defaults < DAG `models` < `--models-file`.
 
 ## CLI options
 
@@ -97,6 +131,7 @@ See [`examples/example_dag.json`](./examples/example_dag.json) for a worked exam
 | `--canvas`                  | —                    | Canvas filename stem (no `.canvas.tsx`). Used only if `--canvas-path` is omitted.   |
 | `--canvases-dir`            | per-workspace        | Override the canvases output directory. Used only with `--canvas`.                  |
 | `--cwd`                     | `process.cwd()`      | Working dir each subagent operates in.                                              |
+| `--models-file`             | —                    | JSON file containing a partial complexity → model override map.                     |
 | `--init-only`               | `false`              | Write the initial all-`PENDING` canvas and exit. No `CURSOR_API_KEY` required.      |
 | `--debounce`                | `200` ms             | Canvas write debounce interval.                                                     |
 | `--task-timeout-ms`         | `1200000` (20 min)   | Marks a task `ERROR` if it exceeds this duration.                                  |

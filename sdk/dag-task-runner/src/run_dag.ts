@@ -16,8 +16,9 @@
  *   --canvas <name> [--canvases-dir]   Compose path from a name + dir.
  *
  * Other options:
- *   --cwd <dir>     Working dir each subagent operates in (default: process.cwd()).
- *   --debounce <ms> Canvas write debounce (default: 200).
+ *   --cwd <dir>            Working dir each subagent operates in (default: process.cwd()).
+ *   --models-file <path>   Optional JSON complexity -> model override map.
+ *   --debounce <ms>        Canvas write debounce (default: 200).
  *   --task-timeout-ms <ms>   Per-task timeout guard (default: 20m).
  *   --stream-publish-ms <ms> Throttle live stream publishes (default: 500ms).
  */
@@ -29,8 +30,8 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
 
-import { parseDAG, computeRanks, modelForComplexity } from "./dag.js";
-import type { RawTask } from "./dag.js";
+import { parseDAG, computeRanks, createModelResolver, validateModelMap } from "./dag.js";
+import type { ModelMapOverride, RawTask } from "./dag.js";
 import {
   CanvasWriter,
   initialRunState,
@@ -42,6 +43,7 @@ interface CliArgs {
   dag: string;
   canvasPath: string;
   cwd: string;
+  modelsFile?: string;
   debounceMs: number;
   taskTimeoutMs: number;
   streamPublishMs: number;
@@ -112,6 +114,7 @@ function parseArgs(argv: string[]): CliArgs {
     dag: args.dag,
     canvasPath,
     cwd,
+    modelsFile: args["models-file"],
     debounceMs,
     taskTimeoutMs,
     streamPublishMs,
@@ -127,6 +130,13 @@ function parsePositiveInt(raw: string | undefined, fallback: number, flag: strin
     throw new Error(`${flag} must be a positive number`);
   }
   return Math.floor(n);
+}
+
+function mergeModelOverrides(
+  dagModels: ModelMapOverride | undefined,
+  fileModels: ModelMapOverride | undefined,
+): ModelMapOverride {
+  return { ...(dagModels ?? {}), ...(fileModels ?? {}) };
 }
 
 /** Mirrors the canvas skill's path scheme. */
@@ -155,6 +165,14 @@ async function main(): Promise<void> {
 
   const raw = JSON.parse(await readFile(args.dag, "utf8"));
   const dag = parseDAG(raw);
+  const fileModels =
+    args.modelsFile === undefined
+      ? undefined
+      : validateModelMap(
+          JSON.parse(await readFile(args.modelsFile, "utf8")),
+          `--models-file ${args.modelsFile}`,
+        );
+  const modelForComplexity = createModelResolver(mergeModelOverrides(dag.models, fileModels));
   const ranks = computeRanks(dag);
 
   const state = initialRunState(dag, modelForComplexity);

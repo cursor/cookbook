@@ -28,6 +28,11 @@ You (the parent agent) author the DAG inline using your understanding of the use
 ```json
 {
   "title": "<short human-readable title for the run>",
+  "models": {
+    "HIGH": "gpt-5.3-codex",
+    "MED": "composer-2",
+    "LOW": "composer-2-fast"
+  },
   "tasks": [
     {
       "id": "<unique kebab-case id>",
@@ -44,6 +49,7 @@ Rules:
 - Every `depends_on` entry must reference another task's `id`.
 - No cycles. The runner rejects cyclic DAGs at parse time.
 - `complexity` controls the model the subagent uses (see table below). Pick `HIGH` for novel/complex reasoning, `MED` for typical implementation, `LOW` for mechanical/lookup tasks.
+- Optional top-level `models` can override the default complexity → model map for this DAG.
 - `subtask_prompt` should read like a standalone request — the runner automatically prepends a short summary of upstream task outputs, so you do not need to repeat them.
 - Do **not** put two tasks that write to the same file in the same rank (siblings within a rank run concurrently and would race).
 
@@ -129,6 +135,7 @@ Same `--canvas-path` as Step 1. The runner:
 
 | Flag | Default | Purpose |
 |------|---------|---------|
+| `--models-file <path>` | — | JSON file containing a partial complexity → model override map. |
 | `--task-timeout-ms <ms>` | `1200000` (20 min) | Marks a task `ERROR` if it runs too long. |
 | `--stream-publish-ms <ms>` | `500` | Throttles live canvas streaming writes. |
 | `--stream-idle-timeout-ms <ms>` | `300000` (5 min) | Marks a task `ERROR` if no stream events arrive. |
@@ -145,6 +152,8 @@ After the runner exits, briefly summarize what completed/failed and re-link the 
 | HIGH       | `gpt-5.3-codex`   |
 | MED        | `composer-2`       |
 | LOW        | `composer-2-fast`  |
+
+Override any subset inline with top-level DAG `models`, or pass a reusable profile with `--models-file <path>`. Precedence is defaults < DAG `models` < `--models-file`.
 
 ## Auth
 
@@ -169,6 +178,7 @@ set -a && source .env && set +a
 | `--canvas`                  | —                    | Canvas filename stem (no `.canvas.tsx`). Used only if `--canvas-path` is omitted.   |
 | `--canvases-dir`            | derived from cwd     | Override the canvases output directory. Used only with `--canvas`.                 |
 | `--cwd`                     | `process.cwd()`      | Working dir each subagent operates in.                                             |
+| `--models-file`             | —                    | JSON file containing a partial complexity → model override map.                    |
 | `--debounce`                | `200` (ms)           | Canvas write debounce interval.                                                    |
 | `--init-only`               | `false`              | Write the initial all-`PENDING` canvas and exit. No `CURSOR_API_KEY` required.     |
 | `--task-timeout-ms`         | `1200000` (20 min)   | Marks a task `ERROR` if it exceeds this duration.                                  |

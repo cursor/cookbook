@@ -5,6 +5,8 @@
  */
 
 export type Complexity = "HIGH" | "MED" | "LOW";
+export type ModelMap = Record<Complexity, string>;
+export type ModelMapOverride = Partial<ModelMap>;
 
 export interface RawTask {
   id: string;
@@ -15,10 +17,18 @@ export interface RawTask {
 
 export interface DAG {
   title: string;
+  models?: ModelMapOverride;
   tasks: RawTask[];
 }
 
 const COMPLEXITY_VALUES = new Set<Complexity>(["HIGH", "MED", "LOW"]);
+const COMPLEXITY_KEYS = ["HIGH", "MED", "LOW"] as const satisfies readonly Complexity[];
+
+export const DEFAULT_MODEL_MAP: ModelMap = {
+  HIGH: "gpt-5.3-codex",
+  MED: "composer-2",
+  LOW: "composer-2-fast",
+};
 
 export function parseDAG(raw: unknown): DAG {
   if (!raw || typeof raw !== "object") {
@@ -53,7 +63,9 @@ export function parseDAG(raw: unknown): DAG {
 
   detectCycle(tasks);
 
-  return { title: obj.title, tasks };
+  const models = obj.models === undefined ? undefined : validateModelMap(obj.models, "DAG.models");
+
+  return { title: obj.title, models, tasks };
 }
 
 function validateTask(raw: unknown, index: number): RawTask {
@@ -176,13 +188,30 @@ export function computeRanks(dag: DAG): RawTask[][] {
   return ranks;
 }
 
-export function modelForComplexity(c: Complexity): string {
-  switch (c) {
-    case "HIGH":
-      return "gpt-5.3-codex";
-    case "MED":
-      return "composer-2";
-    case "LOW":
-      return "composer-2-fast";
+export function validateModelMap(raw: unknown, label = "model map"): ModelMapOverride {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error(`${label} must be a JSON object.`);
+  }
+  const obj = raw as Record<string, unknown>;
+  const models: ModelMapOverride = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (!COMPLEXITY_VALUES.has(key as Complexity)) {
+      throw new Error(`${label} contains unknown complexity key: ${key}`);
+    }
+    if (typeof value !== "string" || value.trim() === "") {
+      throw new Error(`${label}.${key} must be a non-empty string.`);
+    }
+    models[key as Complexity] = value.trim();
+  }
+  return models;
+}
+
+export function createModelResolver(overrides: ModelMapOverride = {}): (c: Complexity) => string {
+  const models: ModelMap = { ...DEFAULT_MODEL_MAP, ...overrides };
+  return (c: Complexity): string => {
+    if (!COMPLEXITY_KEYS.includes(c)) {
+      throw new Error(`Unknown complexity: ${c}`);
+    }
+    return models[c];
   }
 }
