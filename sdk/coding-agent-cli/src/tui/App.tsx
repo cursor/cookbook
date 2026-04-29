@@ -174,8 +174,10 @@ export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
     }
   })
 
-  const commandPanelRows = Math.min(8, Math.max(5, rows - 8))
-  const modelPanelRows = Math.min(10, Math.max(5, rows - 8))
+  const commandSelectRows = Math.min(6, Math.max(3, rows - 10))
+  const modelSelectRows = Math.min(8, Math.max(3, rows - 10))
+  const commandPanelRows = 2 + commandSelectRows
+  const modelPanelRows = 3 + modelSelectRows
 
   const transcriptViewportRows = Math.max(
     4,
@@ -505,7 +507,7 @@ export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
           <text fg="gray">Use arrows and Enter, or Escape to cancel.</text>
           <select
             focused={mode === "command"}
-            height={Math.min(6, Math.max(3, rows - 10))}
+            height={commandSelectRows}
             options={commandItems}
             onSelect={selectCommandOption}
             showDescription={false}
@@ -533,7 +535,7 @@ export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
           ) : (
             <select
               focused={mode === "model"}
-              height={Math.min(8, Math.max(3, rows - 10))}
+              height={modelSelectRows}
               options={filteredModelItems}
               onSelect={selectModelOption}
               showScrollIndicator
