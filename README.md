@@ -24,4 +24,8 @@ A kanban board for viewing Cursor Cloud Agents, grouping them by status or repos
 
 A minimal command-line interface that lets you spawn Cursor agents from your terminal.
 
+### [Test generator](sdk/test-generator)
+
+A CLI that points a Cursor agent at your source files, generates unit tests, runs them, and iterates until they pass. Supports TypeScript/JavaScript (Vitest or Jest) and Python (Pytest), with an interactive Ink TUI.
+
 Learn more in the [Cursor SDK TypeScript docs](https://cursor.com/docs/api/sdk/typescript).
