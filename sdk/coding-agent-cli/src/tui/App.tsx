@@ -96,11 +96,13 @@ export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
     }
 
     if (mode === "model") {
+      const normalizedCharacter = character.toLowerCase()
+
       if (key.backspace || key.delete) {
         setModelSearch((value) => value.slice(0, -1))
-      } else if (character === "T") {
+      } else if (normalizedCharacter === "t") {
         toggleModelPreference("thinking")
-      } else if (character === "F") {
+      } else if (normalizedCharacter === "f") {
         toggleModelPreference("fast")
       } else if (isSearchInput(character)) {
         setModelSearch((value) => `${value}${character}`)
