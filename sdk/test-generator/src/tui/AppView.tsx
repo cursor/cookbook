@@ -5,9 +5,9 @@ import SelectInput from "ink-select-input"
 import TextInput from "ink-text-input"
 import type { ModelSelection } from "@cursor/sdk"
 import type { Framework, LanguageOverride, ProjectInfo } from "../detector.js"
+import { compactText, formatDuration } from "../format.js"
 import { formatCommand } from "../runner.js"
 import {
-  formatDuration,
   formatModelLabel,
   type AgentEvent,
   type ModelChoice,
@@ -384,10 +384,6 @@ function modelChoiceToItem(choice: ModelChoice): ModelSelectItem {
     label: choice.description ? `${choice.label} - ${choice.description}` : choice.label,
     value: choice.value,
   }
-}
-
-function compactText(text: string) {
-  return text.replace(/\s+/g, " ").trim()
 }
 
 function getErrorMessage(error: unknown) {

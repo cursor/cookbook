@@ -9,6 +9,7 @@ import {
 } from "@cursor/sdk"
 import type { ProjectInfo } from "./detector.js"
 import type { CommandSpec } from "./detector.js"
+export { formatDuration } from "./format.js"
 import { buildGeneratePrompt, buildRepairPrompt } from "./prompts.js"
 import type { TestResult } from "./runner.js"
 
@@ -182,14 +183,6 @@ export class TestGenSession {
 export function formatModelLabel(model: ModelSelection) {
   const params = model.params?.map((param) => param.value).filter(Boolean)
   return params?.length ? `${model.id} (${params.join(", ")})` : model.id
-}
-
-export function formatDuration(ms: number) {
-  if (ms < 1000) {
-    return `${ms}ms`
-  }
-
-  return `${(ms / 1000).toFixed(1)}s`
 }
 
 function modelToChoices(model: SDKModel): ModelChoice[] {

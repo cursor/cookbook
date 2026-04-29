@@ -9,6 +9,7 @@ import {
   type Framework,
   type LanguageOverride,
 } from "./detector.js"
+import { compactText, formatDuration } from "./format.js"
 import { formatCommand } from "./runner.js"
 import type { AgentEvent } from "./session.js"
 import {
@@ -308,18 +309,6 @@ function readPositiveInteger(value: string, option: string) {
     throw new Error(`Expected ${option} to be a positive integer.`)
   }
   return parsed
-}
-
-function compactText(text: string) {
-  return text.replace(/\s+/g, " ").trim()
-}
-
-function formatDuration(ms: number) {
-  if (ms < 1000) {
-    return `${ms}ms`
-  }
-
-  return `${(ms / 1000).toFixed(1)}s`
 }
 
 function printHelp() {

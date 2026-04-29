@@ -29,6 +29,12 @@ export type GenerateFileOptions = GenerateOptions & {
   onEvent: (event: AgentEvent) => void
 }
 
+type UnifiedDiffOptions = {
+  after: string
+  before: string
+  filePath: string
+}
+
 export async function detectProjectForOptions(cwd: string, options: GenerateOptions) {
   return detectProject(cwd, {
     framework: options.framework,
@@ -110,10 +116,11 @@ export async function generateTestsForFile(
   )
 
   let latestResult: TestResult | undefined
-  let iterations = 0
+  let repairs = 0
+  let testRuns = 0
 
-  while (iterations < options.maxIters) {
-    iterations += 1
+  while (true) {
+    testRuns += 1
     const command = project.runCommand(testPath)
     options.onEvent({ type: "test_run_started", command })
     latestResult = await runTests(project, testPath, {
@@ -121,7 +128,7 @@ export async function generateTestsForFile(
     })
     options.onEvent({ type: "test_run_finished", result: latestResult })
 
-    if (latestResult.ok || iterations >= options.maxIters) {
+    if (latestResult.ok || repairs >= options.maxIters) {
       break
     }
 
@@ -140,18 +147,19 @@ export async function generateTestsForFile(
       },
       options.onEvent
     )
+    repairs += 1
   }
 
   const afterTest = await readOptionalFile(testPath)
 
   return {
     accepted: false,
-    diff: createUnifiedDiff(
-      path.relative(project.cwd, testPath),
-      beforeTest ?? "",
-      afterTest ?? ""
-    ),
-    iterations,
+    diff: createUnifiedDiff({
+      after: afterTest ?? "",
+      before: beforeTest ?? "",
+      filePath: path.relative(project.cwd, testPath),
+    }),
+    iterations: testRuns,
     ok: latestResult?.ok === true,
     originalTestContent: beforeTest,
     sourcePath,
@@ -189,13 +197,13 @@ function hasGlobMagic(value: string) {
   return /[*?[\]{}()!+@]/.test(value)
 }
 
-function createUnifiedDiff(filePath: string, before: string, after: string) {
+function createUnifiedDiff({ after, before, filePath }: UnifiedDiffOptions) {
   if (before === after) {
     return `No changes in ${filePath}`
   }
 
-  const beforeLines = before.split("\n")
-  const afterLines = after.split("\n")
+  const beforeLines = splitDiffLines(before)
+  const afterLines = splitDiffLines(after)
   const lines = [`--- a/${filePath}`, `+++ b/${filePath}`]
   const max = Math.max(beforeLines.length, afterLines.length)
 
@@ -220,4 +228,8 @@ function createUnifiedDiff(filePath: string, before: string, after: string) {
   }
 
   return lines.join("\n")
+}
+
+function splitDiffLines(value: string) {
+  return value.length === 0 ? [] : value.split("\n")
 }
