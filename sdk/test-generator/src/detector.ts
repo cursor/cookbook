@@ -227,9 +227,8 @@ function pythonTestPath({
   const relative = path.relative(cwd, sourcePath)
   const parsed = path.parse(relative)
   const parts = parsed.dir.split(path.sep).filter(Boolean)
-  const srcIndex = parts.lastIndexOf("src")
-  const baseParts = srcIndex > 0 ? parts.slice(0, srcIndex) : []
-  const testsDir = path.join(cwd, ...baseParts, "tests")
+  const testParts = parts[0] === "src" ? parts.slice(1) : parts
+  const testsDir = path.join(cwd, "tests", ...testParts)
 
   return path.join(testsDir, `test_${parsed.name}.py`)
 }

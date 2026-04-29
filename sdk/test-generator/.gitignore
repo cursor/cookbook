@@ -2,5 +2,5 @@ dist
 node_modules
 examples/**/*.test.ts
 examples/tests/test_*.py
-tests/test_*.py
+tests/**/test_*.py
 .env
