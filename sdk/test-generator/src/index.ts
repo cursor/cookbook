@@ -40,6 +40,11 @@ type TuiAppComponent = React.ComponentType<{
   initialOptions: CliOptions
 }>
 
+type PositiveIntegerOptions = {
+  option: string
+  value: string
+}
+
 const DEFAULT_MODEL = process.env.CURSOR_MODEL ?? "composer-2"
 
 async function main() {
@@ -155,13 +160,19 @@ function parseArgs(argv: string[]): CliOptions {
     }
 
     if (arg === "--max-iters") {
-      maxIters = readPositiveInteger(readOptionValue(argv, index, arg), arg)
+      maxIters = readPositiveInteger({
+        option: arg,
+        value: readOptionValue(argv, index, arg),
+      })
       index += 1
       continue
     }
 
     if (arg.startsWith("--max-iters=")) {
-      maxIters = readPositiveInteger(arg.slice("--max-iters=".length), "--max-iters")
+      maxIters = readPositiveInteger({
+        option: "--max-iters",
+        value: arg.slice("--max-iters=".length),
+      })
       continue
     }
 
@@ -303,7 +314,7 @@ function readOptionValue(argv: string[], index: number, option: string) {
   return value
 }
 
-function readPositiveInteger(value: string, option: string) {
+function readPositiveInteger({ option, value }: PositiveIntegerOptions) {
   const parsed = Number.parseInt(value, 10)
   if (!Number.isInteger(parsed) || parsed < 1) {
     throw new Error(`Expected ${option} to be a positive integer.`)

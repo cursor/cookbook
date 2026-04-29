@@ -36,7 +36,7 @@ type PackageJson = {
 
 const TS_SOURCE_GLOBS = ["**/*.{ts,tsx,js,jsx}", "!**/*.test.*", "!**/*.spec.*"]
 const PYTHON_SOURCE_GLOBS = ["**/*.py", "!**/test_*.py", "!**/*_test.py"]
-const IGNORED_GLOBS = ["!**/node_modules/**", "!**/dist/**", "!**/.git/**"]
+export const IGNORED_GLOBS = ["!**/node_modules/**", "!**/dist/**", "!**/.git/**"]
 
 export async function detectProject(
   cwd: string,

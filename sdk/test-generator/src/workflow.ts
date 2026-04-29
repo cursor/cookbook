@@ -2,7 +2,12 @@ import { existsSync } from "node:fs"
 import { mkdir, readFile, rm, stat, writeFile } from "node:fs/promises"
 import path from "node:path"
 import fg from "fast-glob"
-import { detectProject, listSourceFiles, type ProjectInfo } from "./detector.js"
+import {
+  detectProject,
+  IGNORED_GLOBS,
+  listSourceFiles,
+  type ProjectInfo,
+} from "./detector.js"
 import { runTests, type TestResult } from "./runner.js"
 import type { AgentEvent, TestGenSession } from "./session.js"
 
@@ -61,7 +66,7 @@ export async function resolveTargetFiles(
     const absolute = path.resolve(project.cwd, target)
 
     if (hasGlobMagic(target)) {
-      const matches = await fg(target, {
+      const matches = await fg([target, ...IGNORED_GLOBS], {
         cwd: project.cwd,
         absolute: true,
         onlyFiles: true,
@@ -74,7 +79,7 @@ export async function resolveTargetFiles(
 
     const details = await stat(absolute)
     if (details.isDirectory()) {
-      const matches = await fg(project.sourceGlobs, {
+      const matches = await fg([...project.sourceGlobs, ...IGNORED_GLOBS], {
         cwd: absolute,
         absolute: true,
         onlyFiles: true,
