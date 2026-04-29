@@ -24,4 +24,4 @@ A kanban board for viewing Cursor Cloud Agents, grouping them by status or repos
 
 A minimal command-line interface that lets you spawn Cursor agents from your terminal.
 
-Learn more in the [Cursor SDK TypeScript docs](https://cursor.com/docs/api/sdk/typescript.md).
+Learn more in the [Cursor SDK TypeScript docs](https://cursor.com/docs/api/sdk/typescript).
