@@ -1,7 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react"
-import { Box, Text, useApp, useInput, useWindowSize } from "ink"
-import SelectInput from "ink-select-input"
-import TextInput from "ink-text-input"
+import {
+  TextAttributes,
+  type InputRenderableOptions,
+  type KeyEvent,
+} from "@opentui/core"
+import { useKeyboard, useRenderer, useTerminalDimensions } from "@opentui/react"
+import { createElement, type ReactNode, useEffect, useMemo, useRef, useState } from "react"
 
 import {
   CodingAgentSession,
@@ -34,14 +37,21 @@ type TranscriptEntry = {
 
 type ModelSelectItem = {
   key?: string
-  label: string
+  name: string
+  description: string
   value: ModelSelection
 }
 
 type CommandSelectItem = {
   key?: string
-  label: string
+  name: string
+  description: string
   value: SlashCommandName
+}
+
+type InputEventHandlers = {
+  onInput?: (value: string) => void
+  onSubmit?: (value: string) => void
 }
 
 type ModelPreference = {
@@ -51,9 +61,18 @@ type ModelPreference = {
 
 type ViewMode = "command" | "input" | "model"
 
+type TuiInputProps = Omit<InputRenderableOptions, "onSubmit"> & {
+  focused?: boolean
+  onInput?: (value: string) => void
+  onSubmit?: (value: string) => void
+}
+
+const TuiInput = (props: TuiInputProps): ReactNode =>
+  createElement("input", props as Record<string, unknown>)
+
 export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
-  const { exit } = useApp()
-  const { columns, rows } = useWindowSize()
+  const renderer = useRenderer()
+  const { width: columns, height: rows } = useTerminalDimensions()
   const sessionRef = useRef<CodingAgentSession | null>(null)
   const nextIdRef = useRef(0)
   const [busy, setBusy] = useState(false)
@@ -89,14 +108,20 @@ export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
     }
   }, [])
 
-  useInput((character, key) => {
-    if (mode === "model" && key.escape) {
+  const exitApp = () => {
+    renderer.destroy()
+  }
+
+  useKeyboard((key) => {
+    const character = getInputCharacter(key)
+
+    if (mode === "model" && key.name === "escape") {
       setMode("input")
       return
     }
 
     if (mode === "model") {
-      if (key.backspace || key.delete) {
+      if (key.name === "backspace" || key.name === "delete") {
         setModelSearch((value) => value.slice(0, -1))
       } else if (character === "T") {
         toggleModelPreference("thinking")
@@ -109,21 +134,21 @@ export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
       return
     }
 
-    if (mode === "command" && key.escape) {
+    if (mode === "command" && key.name === "escape") {
       setInput("")
       setMode("input")
       return
     }
 
-    if (mode === "input" && busy && key.ctrl && character === "c") {
+    if (mode === "input" && busy && key.ctrl && key.name === "c") {
       if (!cancelRequested) {
         void cancelActiveRun()
       }
       return
     }
 
-    if (mode === "input" && !busy && key.ctrl && character === "c") {
-      exit()
+    if (mode === "input" && !busy && key.ctrl && key.name === "c") {
+      exitApp()
       return
     }
 
@@ -131,25 +156,28 @@ export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
       const pageSize = Math.max(1, transcriptViewportRows - 1)
       const maxScrollOffset = Math.max(0, transcriptLines.length - transcriptViewportRows)
 
-      if (key.upArrow) {
+      if (key.name === "up") {
         setScrollOffset((offset) => Math.min(maxScrollOffset, offset + 1))
-      } else if (key.downArrow) {
+      } else if (key.name === "down") {
         setScrollOffset((offset) => Math.max(0, offset - 1))
-      } else if (key.pageUp) {
+      } else if (key.name === "pageup") {
         setScrollOffset((offset) => Math.min(maxScrollOffset, offset + pageSize))
-      } else if (key.pageDown) {
+      } else if (key.name === "pagedown") {
         setScrollOffset((offset) => Math.max(0, offset - pageSize))
-      } else if (key.home) {
+      } else if (key.name === "home") {
         setScrollOffset(maxScrollOffset)
-      } else if (key.end) {
+      } else if (key.name === "end") {
         setScrollOffset(0)
       }
     }
   })
 
+  const commandPanelRows = Math.min(8, Math.max(5, rows - 8))
+  const modelPanelRows = Math.min(10, Math.max(5, rows - 8))
+
   const transcriptViewportRows = Math.max(
     4,
-    rows - (mode === "model" || mode === "command" ? 10 : 6)
+    rows - (mode === "model" ? modelPanelRows + 4 : mode === "command" ? commandPanelRows + 4 : 6)
   )
   const scrollableEntries = useMemo(
     () => [
@@ -187,7 +215,17 @@ export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
   }, [maxScrollOffset])
 
   const commandItems = useMemo<CommandSelectItem[]>(
-    () => getSlashCommandItems(input),
+    () =>
+      getSlashCommandItems(input).map((item) => {
+        const [name, ...descriptionParts] = item.label.split(/\s{2,}/)
+
+        return {
+          key: item.key,
+          name: name ?? item.value,
+          description: descriptionParts.join(" "),
+          value: item.value,
+        }
+      }),
     [input]
   )
   const filteredModelItems = useMemo(
@@ -235,7 +273,7 @@ export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
         break
       case "/exit":
       case "/quit":
-        exit()
+        exitApp()
         break
       default:
         addEntry("error", "command", `Unknown command: ${rawCommand}. Type /help.`)
@@ -262,9 +300,8 @@ export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
       setModelItems(
         choices.map((choice) => ({
           key: modelKey(choice),
-          label: choice.description
-            ? `${choice.label} - ${choice.description}`
-            : choice.label,
+          name: choice.label,
+          description: choice.description ?? "",
           value: choice.value,
         }))
       )
@@ -300,6 +337,18 @@ export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
 
   const selectCommand = (item: CommandSelectItem) => {
     void runCommand(item.value)
+  }
+
+  const selectCommandOption = (_index: number, item: CommandSelectItem | null) => {
+    if (item) {
+      selectCommand(item)
+    }
+  }
+
+  const selectModelOption = (_index: number, item: ModelSelectItem | null) => {
+    if (item) {
+      selectModel(item)
+    }
   }
 
   const resetAgent = async () => {
@@ -425,73 +474,86 @@ export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
   }
 
   return (
-    <Box flexDirection="column" height={rows} paddingX={1}>
-      <Box flexDirection="column" height={transcriptViewportRows}>
+    <box flexDirection="column" height={rows} paddingX={1}>
+      <box flexDirection="column" height={transcriptViewportRows}>
         {visibleTranscriptLines.map((line) => (
           <TranscriptLine key={line.id} line={line} />
         ))}
-      </Box>
+      </box>
 
       {maxScrollOffset > 0 ? (
-        <Text color="gray">
+        <text fg="gray">
           Scroll: Up/Down PgUp/PgDn Home/End -{" "}
           {effectiveScrollOffset === 0 ? "at bottom" : `${effectiveScrollOffset} lines up`}
-        </Text>
+        </text>
       ) : null}
 
       {mode === "command" ? (
-        <Box
+        <box
+          border
           borderStyle="single"
           borderColor="cyan"
           flexDirection="column"
           marginTop={1}
           paddingX={1}
         >
-          <Text bold>Commands</Text>
-          <Text color="gray">Use arrows and Enter, or Escape to cancel.</Text>
-          <SelectInput
-            items={commandItems}
-            isFocused={mode === "command"}
-            limit={Math.min(6, Math.max(3, rows - 10))}
-            onSelect={selectCommand}
+          <text attributes={TextAttributes.BOLD}>Commands</text>
+          <text fg="gray">Use arrows and Enter, or Escape to cancel.</text>
+          <select
+            focused={mode === "command"}
+            height={Math.min(6, Math.max(3, rows - 10))}
+            options={commandItems}
+            onSelect={(_, item) => {
+              if (item) {
+                selectCommand(item as CommandSelectItem)
+              }
+            }}
+            showDescription={false}
           />
-        </Box>
+        </box>
       ) : mode === "model" ? (
-        <Box
+        <box
+          border
           borderStyle="single"
           borderColor="magenta"
           flexDirection="column"
           marginTop={1}
           paddingX={1}
         >
-          <Text bold>Select a model</Text>
-          <Text color="gray">
+          <text attributes={TextAttributes.BOLD}>Select a model</text>
+          <text fg="gray">
             Type to search - T thinking {modelPreference.thinking ? "on" : "off"} - F fast{" "}
             {modelPreference.fast ? "on" : "off"} - Enter choose - Escape cancel
-          </Text>
-          <Text color="gray">Search: {modelSearch || "all models"}</Text>
+          </text>
+          <text fg="gray">Search: {modelSearch || "all models"}</text>
           {loadingModels ? (
-            <Text color="yellow">Loading models...</Text>
+            <text fg="yellow">Loading models...</text>
           ) : filteredModelItems.length === 0 ? (
-            <Text color="yellow">No matching models.</Text>
+            <text fg="yellow">No matching models.</text>
           ) : (
-            <SelectInput
-              items={filteredModelItems}
-              isFocused={mode === "model"}
-              limit={Math.min(8, Math.max(3, rows - 10))}
-              onSelect={selectModel}
+            <select
+              focused={mode === "model"}
+              height={Math.min(8, Math.max(3, rows - 10))}
+              options={filteredModelItems}
+              onSelect={(_, item) => {
+                if (item) {
+                  selectModel(item as ModelSelectItem)
+                }
+              }}
+              showScrollIndicator
             />
           )}
-        </Box>
+        </box>
       ) : (
-        <Box
+        <box
+          border
           borderStyle="single"
           borderColor={busy ? "yellow" : "green"}
           marginTop={1}
           paddingX={1}
         >
-          <TextInput
-            focus={!busy}
+          <TuiInput
+            focused={!busy}
             placeholder={
               busy
                 ? cancelRequested
@@ -500,7 +562,7 @@ export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
                 : "Ask or type /help"
             }
             value={input}
-            onChange={(value) => {
+            onInput={(value) => {
               setInput(value)
               if (!busy && value.startsWith("/")) {
                 setMode("command")
@@ -508,9 +570,9 @@ export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
             }}
             onSubmit={submitInput}
           />
-        </Box>
+        </box>
       )}
-    </Box>
+    </box>
   )
 }
 
@@ -539,24 +601,37 @@ function TranscriptLine({ line }: { line: TranscriptLine }) {
   }[line.kind]
 
   return (
-    <Box>
-      <Text color={color} bold>
+    <box>
+      <text fg={color} attributes={TextAttributes.BOLD}>
         {line.label.padEnd(7)}
-      </Text>
-      <Text>
+      </text>
+      <text>
         {line.parts.map((part, index) => (
-          <Text
+          <span
             key={index}
-            bold={part.bold}
-            color={part.color}
-            dimColor={part.dimColor}
+            attributes={partToAttributes(part)}
+            fg={part.color}
           >
             {part.text}
-          </Text>
+          </span>
         ))}
-      </Text>
-    </Box>
+      </text>
+    </box>
   )
+}
+
+function partToAttributes(part: TranscriptPart) {
+  let attributes = TextAttributes.NONE
+
+  if (part.bold) {
+    attributes |= TextAttributes.BOLD
+  }
+
+  if (part.dimColor) {
+    attributes |= TextAttributes.DIM
+  }
+
+  return attributes
 }
 
 function buildTranscriptLines(entries: TranscriptEntry[], columns: number) {
@@ -952,7 +1027,7 @@ function filterModelItems(
   return items.filter((item) => {
     const matchesSearch =
       !normalizedSearch ||
-      normalizeToken(`${item.label} ${selectionSearchText(item.value)}`).includes(
+      normalizeToken(`${item.name} ${item.description} ${selectionSearchText(item.value)}`).includes(
         normalizedSearch
       )
     const matchesThinking =
@@ -1040,6 +1115,14 @@ function selectionSearchText(selection: ModelSelection) {
     selection.id,
     ...(selection.params ?? []).flatMap((param) => [param.id, param.value]),
   ].join(" ")
+}
+
+function getInputCharacter(key: KeyEvent) {
+  if (key.ctrl || key.meta || key.name.length !== 1) {
+    return ""
+  }
+
+  return key.shift ? key.name.toUpperCase() : key.name
 }
 
 function isSearchInput(input: string) {

@@ -8,6 +8,7 @@
     "rootDir": "src",
     "outDir": "dist",
     "jsx": "react-jsx",
+    "jsxImportSource": "@opentui/react",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
