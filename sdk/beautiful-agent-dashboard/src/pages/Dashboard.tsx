@@ -49,6 +49,7 @@ export default function Dashboard() {
     running: runs.filter((r) => r.status === "Running").length,
     completed: runs.filter((r) => r.status === "Completed").length,
     failed: runs.filter((r) => r.status === "Failed").length,
+    queued: runs.filter((r) => r.status === "Queued").length,
   };
 
   function startAgent() {
@@ -63,7 +64,7 @@ export default function Dashboard() {
       time: "Just now",
     };
 
-    setRuns([newRun, ...runs]);
+    setRuns((prev) => [newRun, ...prev]);
     setPrompt("");
     setShowModal(false);
     setActiveMenu("Runs");
@@ -118,10 +119,11 @@ export default function Dashboard() {
         {activeMenu === "Dashboard" && (
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
             <section className="xl:col-span-2">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
                 <Card title="Running Agents" value={stats.running} color="text-blue-400" />
                 <Card title="Completed Runs" value={stats.completed} color="text-green-400" />
                 <Card title="Failed Runs" value={stats.failed} color="text-red-400" />
+                <Card title="Queued Runs" value={stats.queued} color="text-yellow-400" />
               </div>
 
               <Panel title="Recent Runs">
