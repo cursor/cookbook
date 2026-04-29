@@ -4,6 +4,9 @@ A polished React + Tailwind CSS example dashboard for visualizing Cursor agent r
 
 This example is designed as a clean UI concept for developer-facing agent workflows.
 
+This example is currently UI-focused and demonstrates how a Cursor agent dashboard can be structured. It can be extended to integrate with Cursor SDK for real agent execution, logs, and artifacts.
+
+
 ## Features
 
 - Premium dark dashboard UI
