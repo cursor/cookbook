@@ -13,6 +13,11 @@ export type RepairPromptOptions = GeneratePromptOptions & {
   testContent: string
 }
 
+type CodeFenceOptions = {
+  content: string
+  filePath: string
+}
+
 const TESTING_GUIDANCE: Record<ProjectInfo["framework"], string> = {
   jest: [
     "Use Jest APIs from the existing project.",
@@ -44,7 +49,7 @@ export function buildGeneratePrompt(
     "Keep the tests small and maintainable.",
     "",
     "Source file:",
-    codeFence(options.sourcePath, options.sourceContent),
+    codeFence({ content: options.sourceContent, filePath: options.sourcePath }),
   ].join("\n")
 }
 
@@ -59,13 +64,13 @@ export function buildRepairPrompt(project: ProjectInfo, options: RepairPromptOpt
       : "Do not edit the source file. Only change the generated test file.",
     "",
     "Source file:",
-    codeFence(options.sourcePath, options.sourceContent),
+    codeFence({ content: options.sourceContent, filePath: options.sourcePath }),
     "",
     "Current test file:",
-    codeFence(options.testPath, options.testContent),
+    codeFence({ content: options.testContent, filePath: options.testPath }),
     "",
     "Failure summary:",
-    codeFence("test-output.txt", options.failureSummary),
+    codeFence({ content: options.failureSummary, filePath: "test-output.txt" }),
   ].join("\n")
 }
 
@@ -91,7 +96,7 @@ function relative(project: ProjectInfo, filePath: string) {
   return path.relative(project.cwd, filePath) || "."
 }
 
-function codeFence(filePath: string, content: string) {
+function codeFence({ content, filePath }: CodeFenceOptions) {
   const extension = path.extname(filePath).slice(1) || "text"
   return [`\`\`\`${extension}`, content.trimEnd(), "```"].join("\n")
 }

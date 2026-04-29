@@ -35,6 +35,11 @@ type UnifiedDiffOptions = {
   filePath: string
 }
 
+type DiffOperation =
+  | { kind: "context"; line: string }
+  | { kind: "delete"; line: string }
+  | { kind: "insert"; line: string }
+
 export async function detectProjectForOptions(cwd: string, options: GenerateOptions) {
   return detectProject(cwd, {
     framework: options.framework,
@@ -205,29 +210,79 @@ function createUnifiedDiff({ after, before, filePath }: UnifiedDiffOptions) {
   const beforeLines = splitDiffLines(before)
   const afterLines = splitDiffLines(after)
   const lines = [`--- a/${filePath}`, `+++ b/${filePath}`]
-  const max = Math.max(beforeLines.length, afterLines.length)
 
-  for (let index = 0; index < max; index += 1) {
-    const left = beforeLines[index]
-    const right = afterLines[index]
-
-    if (left === right) {
-      if (left !== undefined && left.trim()) {
-        lines.push(` ${left}`)
+  for (const operation of diffLines(beforeLines, afterLines)) {
+    switch (operation.kind) {
+      case "context":
+        lines.push(` ${operation.line}`)
+        break
+      case "delete":
+        lines.push(`-${operation.line}`)
+        break
+      case "insert":
+        lines.push(`+${operation.line}`)
+        break
+      default: {
+        const exhaustive: never = operation
+        return exhaustive
       }
-      continue
-    }
-
-    if (left !== undefined) {
-      lines.push(`-${left}`)
-    }
-
-    if (right !== undefined) {
-      lines.push(`+${right}`)
     }
   }
 
   return lines.join("\n")
+}
+
+function diffLines(beforeLines: string[], afterLines: string[]): DiffOperation[] {
+  const table = buildLcsTable(beforeLines, afterLines)
+  const operations: DiffOperation[] = []
+  let beforeIndex = 0
+  let afterIndex = 0
+
+  while (beforeIndex < beforeLines.length && afterIndex < afterLines.length) {
+    if (beforeLines[beforeIndex] === afterLines[afterIndex]) {
+      operations.push({ kind: "context", line: beforeLines[beforeIndex] })
+      beforeIndex += 1
+      afterIndex += 1
+      continue
+    }
+
+    if (table[beforeIndex + 1][afterIndex] >= table[beforeIndex][afterIndex + 1]) {
+      operations.push({ kind: "delete", line: beforeLines[beforeIndex] })
+      beforeIndex += 1
+    } else {
+      operations.push({ kind: "insert", line: afterLines[afterIndex] })
+      afterIndex += 1
+    }
+  }
+
+  while (beforeIndex < beforeLines.length) {
+    operations.push({ kind: "delete", line: beforeLines[beforeIndex] })
+    beforeIndex += 1
+  }
+
+  while (afterIndex < afterLines.length) {
+    operations.push({ kind: "insert", line: afterLines[afterIndex] })
+    afterIndex += 1
+  }
+
+  return operations
+}
+
+function buildLcsTable(beforeLines: string[], afterLines: string[]) {
+  const table = Array.from({ length: beforeLines.length + 1 }, () =>
+    Array<number>(afterLines.length + 1).fill(0)
+  )
+
+  for (let beforeIndex = beforeLines.length - 1; beforeIndex >= 0; beforeIndex -= 1) {
+    for (let afterIndex = afterLines.length - 1; afterIndex >= 0; afterIndex -= 1) {
+      table[beforeIndex][afterIndex] =
+        beforeLines[beforeIndex] === afterLines[afterIndex]
+          ? table[beforeIndex + 1][afterIndex + 1] + 1
+          : Math.max(table[beforeIndex + 1][afterIndex], table[beforeIndex][afterIndex + 1])
+    }
+  }
+
+  return table
 }
 
 function splitDiffLines(value: string) {

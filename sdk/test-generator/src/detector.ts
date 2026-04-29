@@ -198,7 +198,7 @@ function createPythonProject(cwd: string): ProjectInfo {
       args: ["-m", "pytest", testPath, "--tb=short", "-q"],
     }),
     sourceGlobs: PYTHON_SOURCE_GLOBS,
-    testFilePathFor: (sourcePath) => pythonTestPath(cwd, sourcePath),
+    testFilePathFor: (sourcePath) => pythonTestPath({ cwd, sourcePath }),
   }
 }
 
@@ -217,7 +217,13 @@ function detectPythonCommand() {
   return "python"
 }
 
-function pythonTestPath(cwd: string, sourcePath: string) {
+function pythonTestPath({
+  cwd,
+  sourcePath,
+}: {
+  cwd: string
+  sourcePath: string
+}) {
   const relative = path.relative(cwd, sourcePath)
   const parsed = path.parse(relative)
   const parts = parsed.dir.split(path.sep).filter(Boolean)

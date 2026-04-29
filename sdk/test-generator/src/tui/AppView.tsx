@@ -42,7 +42,7 @@ type TuiAppProps = {
   initialOptions: TuiOptions
 }
 
-type View = "command" | "loading" | "model" | "picker" | "review" | "running"
+type View = "command" | "error" | "loading" | "model" | "picker" | "review" | "running"
 
 type ModelSelectItem = {
   key?: string
@@ -90,7 +90,10 @@ export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) 
         setSelectedFiles(new Set(sourceFiles.slice(0, Math.min(5, sourceFiles.length))))
         setView("picker")
       } catch (error) {
-        addLog(`Error: ${getErrorMessage(error)}`)
+        if (mounted) {
+          addLog(`Error: ${getErrorMessage(error)}`)
+          setView("error")
+        }
       }
     }
 
@@ -125,17 +128,17 @@ export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) 
     if (view === "command") {
       if (key.escape) {
         setCommandInput("")
-        setView(project ? "picker" : "loading")
+        setView(project ? "picker" : "error")
       }
       return
     }
 
     if (view === "model" && key.escape) {
-      setView("picker")
+      setView(project ? "picker" : "error")
       return
     }
 
-    if (character === "/" && view === "picker") {
+    if (character === "/" && (view === "picker" || view === "error")) {
       setCommandInput("/")
       setView("command")
       return
@@ -170,14 +173,14 @@ export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) 
     switch (command) {
       case "/help":
         addLog("Commands: /help /model /cancel /exit")
-        setView("picker")
+        setView(project ? "picker" : "error")
         break
       case "/model":
         await openModelPicker()
         break
       case "/cancel":
         await cancelRun()
-        setView("picker")
+        setView(project ? "picker" : "error")
         break
       case "/exit":
       case "/quit":
@@ -185,7 +188,7 @@ export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) 
         break
       default:
         addLog(`Unknown command: ${command}`)
-        setView("picker")
+        setView(project ? "picker" : "error")
         break
     }
   }
@@ -202,7 +205,7 @@ export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) 
       setView("model")
     } catch (error) {
       addLog(`Model list failed: ${getErrorMessage(error)}`)
-      setView("picker")
+      setView(project ? "picker" : "error")
     }
   }
 
@@ -210,7 +213,7 @@ export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) 
     setModel(item.value)
     sessionRef.current?.setModel(item.value)
     addLog(`Model set to ${formatModelLabel(item.value)}`)
-    setView("picker")
+    setView(project ? "picker" : "error")
   }
 
   const toggleCurrentFile = () => {
@@ -343,6 +346,17 @@ export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) 
     <Box flexDirection="column">
       <Text bold>{title}</Text>
       {view === "loading" ? <Text>Loading project...</Text> : null}
+      {view === "error" ? (
+        <Box flexDirection="column">
+          <Text color="red">Could not load project.</Text>
+          <Text dimColor>Press / for commands or Ctrl+C to exit.</Text>
+          <Box marginTop={1} flexDirection="column">
+            {logs.slice(-8).map((log, index) => (
+              <Text key={`${index}-${log}`}>{log}</Text>
+            ))}
+          </Box>
+        </Box>
+      ) : null}
       {view === "picker" && project ? (
         <>
           <FilePicker

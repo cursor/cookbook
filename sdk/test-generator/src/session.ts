@@ -9,7 +9,6 @@ import {
 } from "@cursor/sdk"
 import type { ProjectInfo } from "./detector.js"
 import type { CommandSpec } from "./detector.js"
-export { formatDuration } from "./format.js"
 import { buildGeneratePrompt, buildRepairPrompt } from "./prompts.js"
 import type { TestResult } from "./runner.js"
 
