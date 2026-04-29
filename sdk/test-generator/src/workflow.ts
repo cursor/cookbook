@@ -69,6 +69,24 @@ export async function resolveTargetFiles(
 
   for (const target of targets) {
     const absolute = path.resolve(project.cwd, target)
+    const details = await statOptional(absolute)
+
+    if (details?.isDirectory()) {
+      const matches = await fg([...project.sourceGlobs, ...IGNORED_GLOBS], {
+        cwd: absolute,
+        absolute: true,
+        onlyFiles: true,
+      })
+      for (const match of matches) {
+        files.add(match)
+      }
+      continue
+    }
+
+    if (details?.isFile()) {
+      files.add(absolute)
+      continue
+    }
 
     if (hasGlobMagic(target)) {
       const matches = await fg([target, ...IGNORED_GLOBS], {
@@ -82,20 +100,7 @@ export async function resolveTargetFiles(
       continue
     }
 
-    const details = await stat(absolute)
-    if (details.isDirectory()) {
-      const matches = await fg([...project.sourceGlobs, ...IGNORED_GLOBS], {
-        cwd: absolute,
-        absolute: true,
-        onlyFiles: true,
-      })
-      for (const match of matches) {
-        files.add(match)
-      }
-      continue
-    }
-
-    files.add(absolute)
+    await stat(absolute)
   }
 
   return Array.from(files).sort((left, right) => left.localeCompare(right))
@@ -205,6 +210,14 @@ export async function rejectGeneratedFile(result: GenerateFileResult) {
 async function readOptionalFile(filePath: string) {
   try {
     return await readFile(filePath, "utf8")
+  } catch {
+    return undefined
+  }
+}
+
+async function statOptional(filePath: string) {
+  try {
+    return await stat(filePath)
   } catch {
     return undefined
   }

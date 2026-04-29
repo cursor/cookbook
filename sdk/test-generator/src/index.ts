@@ -54,7 +54,9 @@ type OptionValueOptions = {
 const DEFAULT_MODEL = process.env.CURSOR_MODEL ?? "composer-2"
 
 async function main() {
-  const options = parseArgs(process.argv.slice(2))
+  const options = parseArgs(process.argv.slice(2), {
+    allowLeadingSeparator: process.env.npm_lifecycle_event === "dev",
+  })
 
   if (options.help) {
     printHelp()
@@ -88,7 +90,11 @@ async function main() {
   await runPlain(apiKey, options)
 }
 
-function parseArgs(argv: string[]): CliOptions {
+type ParseArgsOptions = {
+  allowLeadingSeparator: boolean
+}
+
+function parseArgs(argv: string[], options: ParseArgsOptions): CliOptions {
   const targets: string[] = []
   let allowSourceEdits = false
   let cwd = process.cwd()
@@ -104,7 +110,11 @@ function parseArgs(argv: string[]): CliOptions {
     const arg = argv[index]
 
     if (arg === "--") {
-      if (index === 0) {
+      if (
+        index === 0 &&
+        options.allowLeadingSeparator &&
+        isKnownOption(argv[index + 1])
+      ) {
         continue
       }
 
@@ -326,6 +336,33 @@ function readPositiveInteger({ option, value }: PositiveIntegerOptions) {
     throw new Error(`Expected ${option} to be a positive integer.`)
   }
   return parsed
+}
+
+function isKnownOption(value: string | undefined) {
+  if (!value) {
+    return false
+  }
+
+  return (
+    value === "--help" ||
+    value === "-h" ||
+    value === "--allow-source-edits" ||
+    value === "--overwrite" ||
+    value === "--yes" ||
+    value === "-y" ||
+    value === "--cwd" ||
+    value === "-C" ||
+    value.startsWith("--cwd=") ||
+    value === "--lang" ||
+    value.startsWith("--lang=") ||
+    value === "--framework" ||
+    value.startsWith("--framework=") ||
+    value === "--max-iters" ||
+    value.startsWith("--max-iters=") ||
+    value === "--model" ||
+    value === "-m" ||
+    value.startsWith("--model=")
+  )
 }
 
 function printHelp() {

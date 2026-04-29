@@ -53,6 +53,7 @@ type ModelSelectItem = {
 export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) {
   const { exit } = useApp()
   const generationCancelledRef = useRef(false)
+  const reviewActionInFlightRef = useRef(false)
   const sessionRef = useRef<TestGenSession | null>(null)
   const [commandInput, setCommandInput] = useState("")
   const [cursorIndex, setCursorIndex] = useState(0)
@@ -106,6 +107,10 @@ export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) 
       void sessionRef.current?.dispose()
     }
   }, [cwd, initialOptions])
+
+  useEffect(() => {
+    reviewActionInFlightRef.current = false
+  }, [reviewIndex, view])
 
   const selectedCount = selectedFiles.size
   const currentReview = results[reviewIndex]
@@ -273,21 +278,31 @@ export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) 
   }
 
   const acceptCurrent = async () => {
+    if (reviewActionInFlightRef.current) {
+      return
+    }
+
     const result = results[reviewIndex]
     if (!result) {
       return
     }
 
+    reviewActionInFlightRef.current = true
     await acceptGeneratedFile(result)
     moveToNextReview()
   }
 
   const rejectCurrent = async () => {
+    if (reviewActionInFlightRef.current) {
+      return
+    }
+
     const result = results[reviewIndex]
     if (!result) {
       return
     }
 
+    reviewActionInFlightRef.current = true
     await rejectGeneratedFile(result)
     moveToNextReview()
   }
