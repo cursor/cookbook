@@ -51,7 +51,7 @@ import type {
 } from "@/lib/agents/types"
 import { cn } from "@/lib/utils"
 
-type GroupBy = "status" | "repository" | "createdAt"
+type GroupBy = "status" | "repository" | "branch" | "createdAt"
 type IconComponent = React.ElementType
 
 type GroupOption = {
@@ -80,6 +80,7 @@ const defaultGroupBy: GroupBy = "status"
 const groupOptions: GroupOption[] = [
   { id: "status", label: "Status", icon: CirclesFourIcon },
   { id: "repository", label: "Repository", icon: KanbanIcon },
+  { id: "branch", label: "Branch", icon: GitBranchIcon },
   { id: "createdAt", label: "Created date", icon: ClockIcon },
 ]
 
