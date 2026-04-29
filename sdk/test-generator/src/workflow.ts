@@ -24,6 +24,7 @@ export type GenerateFileResult = {
   diff: string
   iterations: number
   ok: boolean
+  originalSourceContent?: string
   originalTestContent?: string
   sourcePath: string
   testPath: string
@@ -44,6 +45,11 @@ type DiffOperation =
   | { kind: "context"; line: string }
   | { kind: "delete"; line: string }
   | { kind: "insert"; line: string }
+
+type DiffLinesOptions = {
+  afterLines: string[]
+  beforeLines: string[]
+}
 
 export async function detectProjectForOptions(cwd: string, options: GenerateOptions) {
   return detectProject(cwd, {
@@ -171,6 +177,7 @@ export async function generateTestsForFile(
     }),
     iterations: testRuns,
     ok: latestResult?.ok === true,
+    originalSourceContent: options.allowSourceEdits ? sourceContent : undefined,
     originalTestContent: beforeTest,
     sourcePath,
     testPath,
@@ -183,6 +190,10 @@ export async function acceptGeneratedFile(result: GenerateFileResult) {
 }
 
 export async function rejectGeneratedFile(result: GenerateFileResult) {
+  if (result.originalSourceContent !== undefined) {
+    await writeFile(result.sourcePath, result.originalSourceContent)
+  }
+
   if (result.originalTestContent !== undefined) {
     await writeFile(result.testPath, result.originalTestContent)
     result.accepted = false
@@ -216,7 +227,7 @@ function createUnifiedDiff({ after, before, filePath }: UnifiedDiffOptions) {
   const afterLines = splitDiffLines(after)
   const lines = [`--- a/${filePath}`, `+++ b/${filePath}`]
 
-  for (const operation of diffLines(beforeLines, afterLines)) {
+  for (const operation of diffLines({ afterLines, beforeLines })) {
     switch (operation.kind) {
       case "context":
         lines.push(` ${operation.line}`)
@@ -237,8 +248,8 @@ function createUnifiedDiff({ after, before, filePath }: UnifiedDiffOptions) {
   return lines.join("\n")
 }
 
-function diffLines(beforeLines: string[], afterLines: string[]): DiffOperation[] {
-  const table = buildLcsTable(beforeLines, afterLines)
+function diffLines({ afterLines, beforeLines }: DiffLinesOptions): DiffOperation[] {
+  const table = buildLcsTable({ afterLines, beforeLines })
   const operations: DiffOperation[] = []
   let beforeIndex = 0
   let afterIndex = 0
@@ -273,7 +284,7 @@ function diffLines(beforeLines: string[], afterLines: string[]): DiffOperation[]
   return operations
 }
 
-function buildLcsTable(beforeLines: string[], afterLines: string[]) {
+function buildLcsTable({ afterLines, beforeLines }: DiffLinesOptions) {
   const table = Array.from({ length: beforeLines.length + 1 }, () =>
     Array<number>(afterLines.length + 1).fill(0)
   )

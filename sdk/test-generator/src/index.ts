@@ -45,6 +45,12 @@ type PositiveIntegerOptions = {
   value: string
 }
 
+type OptionValueOptions = {
+  argv: string[]
+  index: number
+  option: string
+}
+
 const DEFAULT_MODEL = process.env.CURSOR_MODEL ?? "composer-2"
 
 async function main() {
@@ -127,7 +133,7 @@ function parseArgs(argv: string[]): CliOptions {
     }
 
     if (arg === "--cwd" || arg === "-C") {
-      cwd = readOptionValue(argv, index, arg)
+      cwd = readOptionValue({ argv, index, option: arg })
       index += 1
       continue
     }
@@ -138,7 +144,7 @@ function parseArgs(argv: string[]): CliOptions {
     }
 
     if (arg === "--lang") {
-      language = normalizeLanguageOverride(readOptionValue(argv, index, arg))
+      language = normalizeLanguageOverride(readOptionValue({ argv, index, option: arg }))
       index += 1
       continue
     }
@@ -149,7 +155,7 @@ function parseArgs(argv: string[]): CliOptions {
     }
 
     if (arg === "--framework") {
-      framework = normalizeFramework(readOptionValue(argv, index, arg))
+      framework = normalizeFramework(readOptionValue({ argv, index, option: arg }))
       index += 1
       continue
     }
@@ -162,7 +168,7 @@ function parseArgs(argv: string[]): CliOptions {
     if (arg === "--max-iters") {
       maxIters = readPositiveInteger({
         option: arg,
-        value: readOptionValue(argv, index, arg),
+        value: readOptionValue({ argv, index, option: arg }),
       })
       index += 1
       continue
@@ -177,7 +183,7 @@ function parseArgs(argv: string[]): CliOptions {
     }
 
     if (arg === "--model" || arg === "-m") {
-      model = readOptionValue(argv, index, arg)
+      model = readOptionValue({ argv, index, option: arg })
       index += 1
       continue
     }
@@ -306,7 +312,7 @@ async function confirm(question: string) {
   }
 }
 
-function readOptionValue(argv: string[], index: number, option: string) {
+function readOptionValue({ argv, index, option }: OptionValueOptions) {
   const value = argv[index + 1]
   if (!value || value.startsWith("-")) {
     throw new Error(`Expected a value after ${option}.`)
