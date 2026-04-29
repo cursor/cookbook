@@ -22,7 +22,6 @@ export type GenerateOptions = {
 export type GenerateFileResult = {
   accepted: boolean
   diff: string
-  iterations: number
   ok: boolean
   originalSourceContent?: string
   originalTestContent?: string
@@ -133,10 +132,8 @@ export async function generateTestsForFile(
 
   let latestResult: TestResult | undefined
   let repairs = 0
-  let testRuns = 0
 
   while (true) {
-    testRuns += 1
     const command = project.runCommand(testPath)
     options.onEvent({ type: "test_run_started", command })
     latestResult = await runTests(project, testPath, {
@@ -175,7 +172,6 @@ export async function generateTestsForFile(
       before: beforeTest ?? "",
       filePath: path.relative(project.cwd, testPath),
     }),
-    iterations: testRuns,
     ok: latestResult?.ok === true,
     originalSourceContent: options.allowSourceEdits ? sourceContent : undefined,
     originalTestContent: beforeTest,

@@ -52,6 +52,7 @@ type ModelSelectItem = {
 
 export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) {
   const { exit } = useApp()
+  const generationCancelledRef = useRef(false)
   const sessionRef = useRef<TestGenSession | null>(null)
   const [commandInput, setCommandInput] = useState("")
   const [cursorIndex, setCursorIndex] = useState(0)
@@ -87,6 +88,7 @@ export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) 
 
         setProject(detected)
         setFiles(sourceFiles)
+        setCursorIndex(0)
         setSelectedFiles(new Set(sourceFiles.slice(0, Math.min(5, sourceFiles.length))))
         setView("picker")
       } catch (error) {
@@ -148,7 +150,7 @@ export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) 
       if (key.upArrow) {
         setCursorIndex((index) => Math.max(0, index - 1))
       } else if (key.downArrow) {
-        setCursorIndex((index) => Math.min(files.length - 1, index + 1))
+        setCursorIndex((index) => Math.min(Math.max(0, files.length - 1), index + 1))
       } else if (character === " ") {
         toggleCurrentFile()
       } else if (key.return) {
@@ -242,9 +244,14 @@ export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) 
     setView("running")
     setLogs([])
     setResults([])
+    generationCancelledRef.current = false
     const nextResults: GenerateFileResult[] = []
 
     for (const file of selectedFiles) {
+      if (generationCancelledRef.current) {
+        break
+      }
+
       addLog(`Generating tests for ${path.relative(project.cwd, file)}`)
       try {
         const result = await generateTestsForFile(session, project, file, {
@@ -255,6 +262,9 @@ export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) 
         setResults([...nextResults])
       } catch (error) {
         addLog(`Error: ${getErrorMessage(error)}`)
+        if (generationCancelledRef.current) {
+          break
+        }
       }
     }
 
@@ -293,9 +303,10 @@ export function App({ apiKey, cwd, initialModel, initialOptions }: TuiAppProps) 
   }
 
   const cancelRun = async () => {
+    generationCancelledRef.current = true
     const result = await sessionRef.current?.cancelCurrentRun()
     if (result?.cancelled) {
-      addLog("Cancelled active run.")
+      addLog("Cancelled generation.")
     } else if (result) {
       addLog(result.reason)
     }
