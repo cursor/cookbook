@@ -24,4 +24,8 @@ A kanban board for viewing Cursor Cloud Agents, grouping them by status or repos
 
 A minimal command-line interface that lets you spawn Cursor agents from your terminal.
 
+### [DAG task runner](sdk/dag-task-runner)
+
+Decompose a task into a JSON DAG, fan it out across local subagents, and stream live status into a Cursor Canvas that hot-reloads on every state change. Ships as both a runnable example and a copyable Cursor skill at [`.cursor/skills/dag-task-runner`](.cursor/skills/dag-task-runner).
+
 Learn more in the [Cursor SDK TypeScript docs](https://cursor.com/docs/api/sdk/typescript).
