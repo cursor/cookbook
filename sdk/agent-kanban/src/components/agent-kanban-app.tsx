@@ -51,7 +51,7 @@ import type {
 } from "@/lib/agents/types"
 import { cn } from "@/lib/utils"
 
-type GroupBy = "status" | "repository" | "createdAt"
+type GroupBy = "status" | "repository" | "branch" | "createdAt"
 type IconComponent = React.ElementType
 
 type GroupOption = {
@@ -80,6 +80,7 @@ const defaultGroupBy: GroupBy = "status"
 const groupOptions: GroupOption[] = [
   { id: "status", label: "Status", icon: CirclesFourIcon },
   { id: "repository", label: "Repository", icon: KanbanIcon },
+  { id: "branch", label: "Branch", icon: GitBranchIcon },
   { id: "createdAt", label: "Created date", icon: ClockIcon },
 ]
 
@@ -119,6 +120,30 @@ const loadingCardLineWidths = [
   ["w-4/5", "w-1/2"],
   ["w-3/4", "w-5/6"],
 ] as const
+
+function readPersistedSessionId(): string | null {
+  try {
+    return window.localStorage.getItem(sessionStorageKey)
+  } catch {
+    return null
+  }
+}
+
+function writePersistedSessionId(id: string) {
+  try {
+    window.localStorage.setItem(sessionStorageKey, id)
+  } catch {
+    // Unavailable in sandboxed iframes / locked storage; HttpOnly cookie still works.
+  }
+}
+
+function clearPersistedSessionId() {
+  try {
+    window.localStorage.removeItem(sessionStorageKey)
+  } catch {
+    // ignore
+  }
+}
 
 export function AgentKanbanApp() {
   const [status, setStatus] = React.useState<AppStatus>("checking")
@@ -160,7 +185,7 @@ export function AgentKanbanApp() {
     let cancelled = false
 
     async function restore() {
-      const existingSessionId = window.localStorage.getItem(sessionStorageKey)
+      const existingSessionId = readPersistedSessionId()
       try {
         const restored = await fetchJson<PublicSession>("/api/session", {
           method: "POST",
@@ -170,13 +195,13 @@ export function AgentKanbanApp() {
         if (cancelled) {
           return
         }
-        window.localStorage.setItem(sessionStorageKey, restored.id)
+        writePersistedSessionId(restored.id)
         setSession(restored)
         setStatus("ready")
         await loadBoard(restored.id)
       } catch {
         if (!cancelled) {
-          window.localStorage.removeItem(sessionStorageKey)
+          clearPersistedSessionId()
           setStatus("onboarding")
         }
       }
@@ -189,7 +214,7 @@ export function AgentKanbanApp() {
   }, [loadBoard])
 
   async function handleSessionCreated(nextSession: PublicSession) {
-    window.localStorage.setItem(sessionStorageKey, nextSession.id)
+    writePersistedSessionId(nextSession.id)
     setSession(nextSession)
     setStatus("ready")
     await loadBoard(nextSession.id)
@@ -203,7 +228,7 @@ export function AgentKanbanApp() {
   }
 
   async function handleForgetKey() {
-    window.localStorage.removeItem(sessionStorageKey)
+    clearPersistedSessionId()
     await fetch("/api/session", { method: "DELETE" })
     setSession(null)
     setAgents([])
