@@ -132,10 +132,12 @@ function parsePositiveInt(raw: string | undefined, fallback: number, flag: strin
   return Math.floor(n);
 }
 
-function mergeModelOverrides(
-  dagModels: ModelMapOverride | undefined,
-  fileModels: ModelMapOverride | undefined,
-): ModelMapOverride {
+interface ModelOverrideSources {
+  dagModels: ModelMapOverride | undefined;
+  fileModels: ModelMapOverride | undefined;
+}
+
+function mergeModelOverrides({ dagModels, fileModels }: ModelOverrideSources): ModelMapOverride {
   return { ...(dagModels ?? {}), ...(fileModels ?? {}) };
 }
 
@@ -172,7 +174,9 @@ async function main(): Promise<void> {
           JSON.parse(await readFile(args.modelsFile, "utf8")),
           `--models-file ${args.modelsFile}`,
         );
-  const modelForComplexity = createModelResolver(mergeModelOverrides(dag.models, fileModels));
+  const modelForComplexity = createModelResolver(
+    mergeModelOverrides({ dagModels: dag.models, fileModels }),
+  );
   const ranks = computeRanks(dag);
 
   const state = initialRunState(dag, modelForComplexity);
