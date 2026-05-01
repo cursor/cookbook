@@ -19,7 +19,6 @@ export const generatedAppFiles: TemplateFile[] = [
         },
         dependencies: {
           "@vitejs/plugin-react": "latest",
-          typescript: "latest",
           vite: "latest",
           react: "latest",
           "react-dom": "latest",
@@ -27,6 +26,7 @@ export const generatedAppFiles: TemplateFile[] = [
         devDependencies: {
           "@types/react": "latest",
           "@types/react-dom": "latest",
+          typescript: "latest",
         },
       },
       null,
