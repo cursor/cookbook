@@ -443,9 +443,10 @@ export async function readArtifactContent(
 
       return {
         bytes: new Uint8Array(await artifactResponse.arrayBuffer()),
-        contentType:
-          artifactResponse.headers.get("content-type") ??
-          contentTypeForArtifactPath(artifactPath),
+        contentType: sanitizeArtifactContentType(
+          artifactResponse.headers.get("content-type"),
+          artifactPath
+        ),
       }
     }
 
@@ -466,7 +467,7 @@ export async function readArtifactContent(
     if (response instanceof Blob) {
       return {
         bytes: new Uint8Array(await response.arrayBuffer()),
-        contentType: response.type || contentTypeForArtifactPath(artifactPath),
+        contentType: sanitizeArtifactContentType(response.type, artifactPath),
       }
     }
   } finally {
@@ -918,6 +919,30 @@ function labelFromRepositoryString(value: string) {
     .replace(/\.git$/, "")
 }
 
+const SAFE_ARTIFACT_CONTENT_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/gif",
+  "image/webp",
+  "image/avif",
+  "video/mp4",
+  "video/webm",
+  "video/quicktime",
+])
+
+function sanitizeArtifactContentType(
+  raw: string | null | undefined,
+  artifactPath: string
+): string {
+  if (raw) {
+    const mimeType = raw.split(";")[0].trim().toLowerCase()
+    if (SAFE_ARTIFACT_CONTENT_TYPES.has(mimeType)) {
+      return mimeType
+    }
+  }
+  return contentTypeForArtifactPath(artifactPath)
+}
+
 function getArtifactPreviewKind(
   artifactPath: string,
   contentType?: string
@@ -962,9 +987,6 @@ function contentTypeForArtifactPath(artifactPath: string) {
   }
   if (normalized.endsWith(".gif")) {
     return "image/gif"
-  }
-  if (normalized.endsWith(".svg")) {
-    return "image/svg+xml"
   }
   return "application/octet-stream"
 }
