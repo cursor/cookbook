@@ -34,6 +34,12 @@ async function main() {
     throw new Error("Set CURSOR_API_KEY before running the CLI.")
   }
 
+  if (!apiKey.startsWith("crsr_")) {
+    throw new Error(
+      "Invalid Cursor API key format. Keys must start with 'crsr_'. Please check your CURSOR_API_KEY."
+    )
+  }
+
   if (options.prompt) {
     await runPlainPrompt(apiKey, options, options.prompt)
     return
