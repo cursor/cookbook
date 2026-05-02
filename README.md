@@ -28,4 +28,8 @@ A minimal command-line interface that lets you spawn Cursor agents from your ter
 
 Decompose a task into a JSON DAG, fan it out across local subagents, and stream live status into a Cursor Canvas that hot-reloads on every state change. Ships as both a runnable example and a copyable Cursor skill at [`.cursor/skills/dag-task-runner`](.cursor/skills/dag-task-runner).
 
+### [Sverklo (code intelligence over MCP)](sdk/sverklo-mcp)
+
+Wire [sverklo](https://github.com/sverklo/sverklo) — a local-first MCP code-intelligence server (MIT) — into your Cursor SDK agent. The agent gets 37 extra tools alongside Cursor's built-ins: hybrid semantic search ranked by PageRank, recursive blast-radius analysis, symbol graph, bi-temporal memory pinned to git SHAs, and a code-quality audit. Demonstrates the canonical pattern for adding any third-party MCP server to a programmatic Cursor agent.
+
 Learn more in the [Cursor SDK TypeScript docs](https://cursor.com/docs/api/sdk/typescript).
