@@ -46,9 +46,11 @@ const run = await agent.send(prompt)
 
 for await (const event of run.stream()) {
   if (event.type === "tool_call") {
-    const { tool } = event as { tool?: string }
-    if (typeof tool === "string") {
-      process.stdout.write(`\n[tool] ${tool}\n`)
+    // The SDK's tool_call event names the tool in `event.name` and only
+    // emits the call-start once (status: "running"). Log on running so we
+    // don't double-print when "completed" arrives later in the stream.
+    if (event.status === "running") {
+      process.stdout.write(`\n[tool] ${event.name}\n`)
     }
     continue
   }
