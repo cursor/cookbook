@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.env
+.env.local
+.canvas/
+pnpm-lock.yaml
+package-lock.json
+*.tsbuildinfo
+.DS_Store
