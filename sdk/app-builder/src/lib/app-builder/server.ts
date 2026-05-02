@@ -130,6 +130,8 @@ const appBuilderRoot = path.join(os.homedir(), ".app-builder")
 const workspaceRoot = path.join(appBuilderRoot, "sessions")
 const settingsPath = path.join(appBuilderRoot, "settings.json")
 const DEFAULT_PROJECT_NAME_TIMEOUT_MS = 15_000
+const packageManagerCommand = "pnpm"
+const useShellForPnpm = process.platform === "win32"
 const APP_BUILDER_INSTRUCTIONS = [
   "You are building a local Vite React TypeScript application for a live preview product.",
   "Edit files directly in the current workspace. The dev server is already running and hot reloads when files change.",
@@ -855,7 +857,7 @@ function normalizeModelToken(value: string) {
 async function prepareSession(session: BuilderSession) {
   await fs.mkdir(session.projectPath, { recursive: true })
   await writeGeneratedApp(session.projectPath)
-  await runCommand("pnpm", ["install"], session)
+  await runCommand(packageManagerCommand, ["install"], session)
   await startDevServer(session)
 }
 
@@ -875,7 +877,7 @@ async function startDevServer(session: BuilderSession) {
   }
 
   const child = spawn(
-    "pnpm",
+    packageManagerCommand,
     [
       "exec",
       "vite",
@@ -888,7 +890,7 @@ async function startDevServer(session: BuilderSession) {
     {
       cwd: session.projectPath,
       env: { ...process.env, BROWSER: "none" },
-      shell: false,
+      shell: useShellForPnpm,
     }
   )
 
@@ -912,7 +914,7 @@ function runCommand(
     const child = spawn(command, args, {
       cwd: session.projectPath,
       env: { ...process.env, CI: "1" },
-      shell: false,
+      shell: useShellForPnpm,
     })
 
     pipeProcessLogs(child, session, command)
