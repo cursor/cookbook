@@ -12,6 +12,10 @@ To run the SDK examples, create a Cursor API key from the [Cursor integrations d
 
 A minimal Node.js example that creates a local agent, sends one prompt, and streams the response.
 
+### [Code reviewer](sdk/code-reviewer)
+
+A small CLI that turns a `git diff` into a structured code review. Streams a Cursor SDK agent over the diff, validates a JSON schema (`summary` + `comments[]` with severity, category, file, line), and exits non-zero on findings at or above a configurable severity — so it can gate CI.
+
 ### [Prototyping tool](sdk/app-builder)
 
 A web app for spinning up agents to scaffold new projects and iterate on ideas in a sandboxed cloud environment.
