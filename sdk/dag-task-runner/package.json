@@ -1,0 +1,30 @@
+{
+  "name": "dag-task-runner",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Cursor SDK runner that decomposes a task into a DAG of subagents and renders live status to a Cursor Canvas.",
+  "packageManager": "pnpm@10.9.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx src/run_dag.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/run_dag.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "init-canvas": "tsx src/run_dag.ts --init-only --dag examples/example_dag.json --canvas-path \"$PWD/.canvas/dag-example.canvas.tsx\"",
+    "example": "tsx src/run_dag.ts --dag examples/example_dag.json --canvas-path \"$PWD/.canvas/dag-example.canvas.tsx\""
+  },
+  "dependencies": {
+    "@cursor/sdk": "^1.0.9"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "sqlite3"]
+  }
+}
