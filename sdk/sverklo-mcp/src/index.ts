@@ -1,4 +1,5 @@
 import { Agent } from "@cursor/sdk"
+import { resolve } from "node:path"
 
 // Wire sverklo as an MCP server for the Cursor SDK agent.
 //
@@ -18,7 +19,10 @@ import { Agent } from "@cursor/sdk"
 //   npm install -g sverklo
 // (Pulls the indexer + a small ONNX embedding model. ~30s, ~90MB.)
 
-const projectPath = process.argv[2] ?? process.cwd()
+// Resolve to absolute up-front. The spawned `sverklo` process inherits
+// `cwd` and re-resolves any relative arg against it, so a relative
+// `projectPath` would target the wrong directory.
+const projectPath = resolve(process.argv[2] ?? process.cwd())
 
 const agent = await Agent.create({
   apiKey: process.env.CURSOR_API_KEY,
