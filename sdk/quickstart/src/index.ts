@@ -14,7 +14,7 @@ async function main() {
   }
 
   const agent = await Agent.create({
-    apiKey: process.env.CURSOR_API_KEY,
+    apiKey,
     name: "SDK quickstart",
     model: { id: process.env.CURSOR_MODEL ?? "composer-2" },
     local: { cwd: process.cwd() },
@@ -25,6 +25,8 @@ async function main() {
   for await (const event of run.stream()) {
     console.log(event);
   }
+
+  await run.wait();
 }
 
 main().catch(console.error);
