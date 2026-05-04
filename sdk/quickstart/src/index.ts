@@ -23,8 +23,19 @@ async function main() {
   const run = await agent.send("Summarize what this repository does");
 
   for await (const event of run.stream()) {
-    console.log(event);
+    if (event.type === "assistant") {
+      const blocks = Array.isArray(event.message?.content)
+        ? event.message.content
+        : [];
+
+      for (const block of blocks) {
+        if (block.type === "text") {
+        }
+      }
+    }
   }
+
+  process.stdout.write("\n");
 
   await run.wait();
 }

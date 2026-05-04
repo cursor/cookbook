@@ -15,9 +15,6 @@ importers:
         specifier: ^17.4.2
         version: 17.4.2
     devDependencies:
-      '@types/dotenv':
-        specifier: ^6.1.1
-        version: 6.1.1
       '@types/node':
         specifier: ^25.6.0
         version: 25.6.0
