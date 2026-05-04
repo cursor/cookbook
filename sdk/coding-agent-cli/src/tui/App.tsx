@@ -137,9 +137,9 @@ export function App({ apiKey, cwd, force, initialModel }: TuiAppProps) {
     if (mode === "model") {
       if (key.name === "backspace" || key.name === "delete") {
         setModelSearch((value) => value.slice(0, -1))
-      } else if (character === "T") {
+      } else if (normalizedCharacter === "t") {
         toggleModelPreference("thinking")
-      } else if (character === "F") {
+      } else if (normalizedCharacter === "f") {
         toggleModelPreference("fast")
       } else if (isSearchInput(character)) {
         setModelSearch((value) => `${value}${character}`)

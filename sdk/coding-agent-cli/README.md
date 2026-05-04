@@ -34,3 +34,5 @@ bun run dev
 ## Notes
 
 Inside the TUI, type `/` to open the command menu. You can switch between local and cloud execution, choose a model, reset the session, or exit from there.
+
+Cloud execution expects the current workspace to be a git repository with `remote.origin.url` set to a GitHub remote.

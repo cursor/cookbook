@@ -2,6 +2,22 @@
 
 This repo contains small examples for building with Cursor.
 
+## Prerequisites
+
+- Node.js 22 or newer
+- pnpm (each example uses a pinned `packageManager` in `package.json`)
+- A Cursor API key from the [Cursor integrations dashboard](https://cursor.com/dashboard/integrations)
+
+## Workspace Setup
+
+Each example under `sdk/` is its own workspace. Install dependencies in the example you want to run.
+
+```bash
+cd sdk/quickstart
+pnpm install
+pnpm dev
+```
+
 ## Cursor SDK
 
 The Cursor SDK is the TypeScript API for running Cursor's coding agent from your own apps, scripts, and workflows. It supports the same agent across local workspaces and cloud runtimes, streams agent events as runs progress, and lets you manage prompts, models, cancellation, artifacts, and conversation state from code.

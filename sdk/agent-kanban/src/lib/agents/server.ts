@@ -563,7 +563,10 @@ async function readSettings(): Promise<Settings> {
 
 async function writeSettings(settings: Settings) {
   await fs.mkdir(settingsDir, { recursive: true })
-  await fs.writeFile(settingsPath, `${JSON.stringify(settings, null, 2)}\n`)
+  await fs.writeFile(settingsPath, `${JSON.stringify(settings, null, 2)}\n`, {
+    mode: 0o600,
+  })
+  await fs.chmod(settingsPath, 0o600).catch(() => {})
 }
 
 function normalizeAgent(rawAgent: unknown): AgentCard {

@@ -29,12 +29,6 @@ export function getSlashCommand(input: string): SlashCommandName | undefined {
   return commandNames.has(command) ? (command as SlashCommandName) : undefined
 }
 
-export function formatSlashCommandHelp() {
-  return slashCommands
-    .map((command) => `${command.name} - ${command.summary}`)
-    .join(" ")
-}
-
 export function getSlashCommandItems(query: string) {
   const normalizedQuery = query.trim().toLowerCase()
 
