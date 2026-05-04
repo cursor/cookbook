@@ -29,4 +29,7 @@ async function main() {
   await run.wait();
 }
 
-main().catch(console.error);
+main().catch((err) => {
+  console.error("An error occurred:", err);
+  process.exit(1);
+});
