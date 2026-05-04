@@ -5,15 +5,14 @@
     "types": ["node"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": "dist",
-    "jsx": "react-jsx",
-    "jsxImportSource": "@opentui/react",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "resolveJsonModule": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": ["*.ts"],
   "exclude": ["dist", "node_modules"]
 }
