@@ -19,6 +19,7 @@
     "typescript": "^6.0.3"
   },
   "dependencies": {
-    "@cursor/sdk": "^1.0.7"
+    "@cursor/sdk": "^1.0.7",
+    "dotenv": "^17.4.2"
   }
 }
