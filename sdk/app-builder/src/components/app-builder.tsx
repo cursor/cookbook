@@ -35,6 +35,7 @@ import {
 } from "@phosphor-icons/react"
 import ReactMarkdown from "react-markdown"
 
+import { RecentAppsList } from "@/components/recent-apps-list"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import {
@@ -63,6 +64,16 @@ import {
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
+import {
+  refreshRecentApps,
+  removeRecentApp,
+  saveRecentApp,
+  updateRecentApp,
+} from "@/lib/app-builder/recent-apps-client"
+import {
+  sortRecentApps,
+  type RecentApp,
+} from "@/lib/app-builder/recent-apps-model"
 import { cn } from "@/lib/utils"
 
 type Session = {
@@ -129,6 +140,7 @@ type Conversation = {
   messages: ChatMessage[]
   input: string
   model: string
+  restoringSessionId?: string
   session: Session | null
 }
 
@@ -244,8 +256,10 @@ export function AppBuilder() {
   const [isApiKeyClearConfirming, setIsApiKeyClearConfirming] = useState(false)
   const [titleGenerationConversationIds, setTitleGenerationConversationIds] =
     useState(() => new Set<string>())
+  const [recentApps, setRecentApps] = useState<RecentApp[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
   const conversationsRef = useRef(conversations)
+  const recentAppsRef = useRef(recentApps)
   const restoredConversationIdsRef = useRef(new Set<string>())
   const titleGenerationConversationIdsRef = useRef(new Set<string>())
   const lastStreamEventTypeRef = useRef<
@@ -260,6 +274,7 @@ export function AppBuilder() {
   )
   const activeRuntime =
     runtimeByConversationId[activeConversation.id] ?? createRuntimeState()
+  const activeRecentAppId = getConversationRecentAppId(activeConversation)
   const session = activeConversation.session
   const messages = activeConversation.messages
   const input = activeConversation.input
@@ -281,6 +296,26 @@ export function AppBuilder() {
   useEffect(() => {
     conversationsRef.current = conversations
   }, [conversations])
+
+  useEffect(() => {
+    recentAppsRef.current = recentApps
+  }, [recentApps])
+
+  useEffect(() => {
+    let cancelled = false
+
+    void refreshRecentApps()
+      .then((apps) => {
+        if (!cancelled) {
+          setRecentApps(apps)
+        }
+      })
+      .catch(() => {})
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -312,7 +347,8 @@ export function AppBuilder() {
       }
 
       const savedApiKey = getSavedCursorApiKey()
-      const restoredSessionId = conversation.session?.id
+      const restoredSessionId =
+        conversation.session?.id ?? conversation.restoringSessionId
       const hasValidSavedApiKey = Boolean(
         savedApiKey && isCursorApiKey(savedApiKey)
       )
@@ -370,6 +406,19 @@ export function AppBuilder() {
         if (isMissingApiKeyError(error)) {
           setHasSavedApiKey(false)
           setIsOnboardingOpen(true)
+          setConversationRuntime(conversation.id, (current) => ({
+            ...current,
+            isCreatingSession: false,
+            isCursorTyping: false,
+            sessionError: null,
+          }))
+          return
+        }
+
+        if (isUnknownSessionError(error) && restoredSessionId) {
+          setHasSavedApiKey(true)
+          setIsOnboardingOpen(false)
+          discardStaleRecentApp(restoredSessionId, conversation.id)
           setConversationRuntime(conversation.id, (current) => ({
             ...current,
             isCreatingSession: false,
@@ -532,6 +581,28 @@ export function AppBuilder() {
     }))
   }
 
+  function setRecentAppInState(recentApp: RecentApp) {
+    setRecentApps((current) =>
+      sortRecentApps([
+        recentApp,
+        ...current.filter((app) => app.id !== recentApp.id),
+      ])
+    )
+  }
+
+  function syncRecentAppTitle(conversationId: string, title: string) {
+    const recentAppId = getConversationRecentAppId(
+      getConversationById(conversationsRef.current, conversationId)
+    )
+    if (!recentAppId) {
+      return
+    }
+
+    void updateRecentApp(recentAppId, { title })
+      .then(setRecentAppInState)
+      .catch(() => {})
+  }
+
   function createConversation() {
     if (!hasSavedApiKey) {
       openOnboarding()
@@ -550,6 +621,104 @@ export function AppBuilder() {
     setApiKey("")
   }
 
+  function openRecentApp(recentApp: RecentApp) {
+    const existingConversation = conversationsRef.current.find(
+      (conversation) => getConversationRecentAppId(conversation) === recentApp.id
+    )
+
+    if (existingConversation) {
+      updateConversation(existingConversation.id, (conversation) => ({
+        ...conversation,
+        title: recentApp.title,
+        restoringSessionId: conversation.session ? undefined : recentApp.id,
+        updatedAt: Date.now(),
+      }))
+      setActiveConversationId(existingConversation.id)
+      setApiKey("")
+      setIsApiKeyClearConfirming(false)
+      void saveRecentApp({
+        id: recentApp.id,
+        title: recentApp.title,
+        touch: true,
+      })
+        .then(setRecentAppInState)
+        .catch(() => {})
+      return
+    }
+
+    const conversation: Conversation = {
+      ...createEmptyConversation(recentApp.title),
+      restoringSessionId: recentApp.id,
+    }
+    setConversations((current) => [conversation, ...current])
+    setRuntimeByConversationId((current) => ({
+      ...current,
+      [conversation.id]: createRuntimeState(),
+    }))
+    setActiveConversationId(conversation.id)
+    setApiKey("")
+    setIsApiKeyClearConfirming(false)
+    void saveRecentApp({
+      id: recentApp.id,
+      title: recentApp.title,
+      touch: true,
+    })
+      .then(setRecentAppInState)
+      .catch(() => {})
+  }
+
+  function toggleRecentAppFavorite(recentAppId: string) {
+    const recentApp = recentAppsRef.current.find((app) => app.id === recentAppId)
+    if (!recentApp) {
+      return
+    }
+
+    const favorite = !recentApp.favorite
+    setRecentAppInState({ ...recentApp, favorite, updatedAt: Date.now() })
+    void updateRecentApp(recentApp.id, { favorite })
+      .then(setRecentAppInState)
+      .catch(() => {
+        void refreshRecentApps()
+          .then(setRecentApps)
+          .catch(() => {})
+      })
+  }
+
+  function deleteRecentApp(recentAppId: string) {
+    setRecentApps((current) => current.filter((app) => app.id !== recentAppId))
+    void removeRecentApp(recentAppId).catch(() => {
+      void refreshRecentApps()
+        .then(setRecentApps)
+        .catch(() => {})
+    })
+  }
+
+  function discardStaleRecentApp(recentAppId: string, conversationId: string) {
+    deleteRecentApp(recentAppId)
+    updateConversation(conversationId, (conversation) => {
+      const session =
+        conversation.session?.id === recentAppId ? null : conversation.session
+      const restoringSessionId =
+        conversation.restoringSessionId === recentAppId
+          ? undefined
+          : conversation.restoringSessionId
+
+      if (
+        session === conversation.session &&
+        restoringSessionId === conversation.restoringSessionId
+      ) {
+        return conversation
+      }
+
+      return {
+        ...conversation,
+        restoringSessionId,
+        session,
+        updatedAt: Date.now(),
+      }
+    })
+  }
+
   function openOnboarding() {
     setApiKey("")
     setIsOnboardingOpen(true)
@@ -565,6 +734,7 @@ export function AppBuilder() {
       return
     }
 
+    syncRecentAppTitle(conversationId, nextTitle)
     updateConversation(conversationId, (conversation) => ({
       ...conversation,
       title: nextTitle,
@@ -623,11 +793,21 @@ export function AppBuilder() {
         throw new Error("The generated project name was empty.")
       }
 
+      const conversation = getConversationById(
+        conversationsRef.current,
+        conversationId
+      )
+      const shouldUpdateTitle = Boolean(
+        conversation && (options.force || shouldGenerateProjectName(conversation))
+      )
       updateConversation(conversationId, (conversation) =>
         options.force || shouldGenerateProjectName(conversation)
           ? { ...conversation, title, updatedAt: Date.now() }
           : conversation
       )
+      if (shouldUpdateTitle) {
+        syncRecentAppTitle(conversationId, title)
+      }
     } catch (error) {
       if (!options.notifyOnError) {
         return
@@ -676,12 +856,25 @@ export function AppBuilder() {
 
     updateConversation(conversationId, (conversation) => ({
       ...conversation,
+      restoringSessionId: undefined,
       session: { ...nextSession, models: nextModels },
       model: isModelSelectionAvailable(nextModels, conversation.model)
         ? conversation.model
         : encodeModelForCatalogItem(nextModels[0]),
       updatedAt: Date.now(),
     }))
+
+    const conversation = getConversationById(
+      conversationsRef.current,
+      conversationId
+    )
+    void saveRecentApp({
+      id: nextSession.id,
+      title: conversation?.title ?? "Untitled project",
+      touch: true,
+    })
+      .then(setRecentAppInState)
+      .catch(() => {})
   }
 
   function selectModel(modelId: string) {
@@ -729,10 +922,12 @@ export function AppBuilder() {
     }
 
     const trimmedApiKey = rawApiKey.trim()
-    const restoredSessionId = getConversationById(
+    const conversation = getConversationById(
       conversationsRef.current,
       conversationId
-    )?.session?.id
+    )
+    const restoredSessionId =
+      conversation?.session?.id ?? conversation?.restoringSessionId
 
     if (!isCursorApiKey(trimmedApiKey)) {
       setConversationRuntime(conversationId, (current) => ({
@@ -776,6 +971,19 @@ export function AppBuilder() {
       }
       return true
     } catch (error) {
+      if (isUnknownSessionError(error) && restoredSessionId) {
+        discardStaleRecentApp(restoredSessionId, conversationId)
+        setHasSavedApiKey(true)
+        setIsOnboardingOpen(false)
+        setConversationRuntime(conversationId, (current) => ({
+          ...current,
+          isCreatingSession: false,
+          isCursorTyping: false,
+          sessionError: null,
+        }))
+        return false
+      }
+
       const message =
         error instanceof Error ? error.message : "Could not start preview."
       const shouldOpenOnboarding = options.openOnboardingOnError ?? true
@@ -858,7 +1066,8 @@ export function AppBuilder() {
 
   async function retrySavedApiKey() {
     const conversationId = activeConversation.id
-    const restoredSessionId = activeConversation.session?.id
+    const restoredSessionId =
+      activeConversation.session?.id ?? activeConversation.restoringSessionId
     const savedApiKey = getSavedCursorApiKey()
     const validSavedApiKey =
       savedApiKey && isCursorApiKey(savedApiKey) ? savedApiKey : undefined
@@ -903,6 +1112,14 @@ export function AppBuilder() {
       if (isMissingApiKeyError(error)) {
         setHasSavedApiKey(false)
         setIsOnboardingOpen(true)
+        setConversationRuntime(conversationId, (current) => ({
+          ...current,
+          sessionError: null,
+        }))
+      } else if (isUnknownSessionError(error) && restoredSessionId) {
+        discardStaleRecentApp(restoredSessionId, conversationId)
+        setHasSavedApiKey(true)
+        setIsOnboardingOpen(false)
         setConversationRuntime(conversationId, (current) => ({
           ...current,
           sessionError: null,
@@ -1278,11 +1495,13 @@ export function AppBuilder() {
         <ConversationSidebar
           conversations={sidebarConversations}
           activeConversationId={activeConversation.id}
+          activeRecentAppId={activeRecentAppId}
           apiKey={apiKey}
           hasSavedApiKey={hasSavedApiKey}
           isApiKeyClearConfirming={isApiKeyClearConfirming}
           isApiKeySettingsOpen={isApiKeySettingsOpen}
           isCreatingSession={isCreatingSession}
+          recentApps={recentApps}
           titleGenerationConversationIds={titleGenerationConversationIds}
           sessionError={sessionError}
           user={session?.user ?? null}
@@ -1290,11 +1509,13 @@ export function AppBuilder() {
           onApiKeySettingsOpenChange={setApiKeySettingsOpen}
           onClearSavedApiKey={confirmClearSavedApiKey}
           onCreateConversation={createConversation}
+          onDeleteRecentApp={deleteRecentApp}
           onGenerateName={generateConversationTitle}
           onHideSidebar={() => {
             setIsProjectSidebarOpen(false)
             setApiKeySettingsOpen(false)
           }}
+          onOpenRecentApp={openRecentApp}
           onSelectConversation={(conversationId) => {
             setActiveConversationId(conversationId)
             setApiKey("")
@@ -1303,6 +1524,7 @@ export function AppBuilder() {
           onRenameConversation={renameConversation}
           onRequireApiKey={openOnboarding}
           onSubmitApiKey={submitApiKeySettings}
+          onToggleRecentAppFavorite={toggleRecentAppFavorite}
         />
       ) : (
         <CollapsedProjectSidebar
@@ -2717,11 +2939,13 @@ function ApiKeyOnboardingModal({
 function ConversationSidebar({
   conversations,
   activeConversationId,
+  activeRecentAppId,
   apiKey,
   hasSavedApiKey,
   isApiKeyClearConfirming,
   isApiKeySettingsOpen,
   isCreatingSession,
+  recentApps,
   sessionError,
   titleGenerationConversationIds,
   user,
@@ -2729,20 +2953,25 @@ function ConversationSidebar({
   onApiKeySettingsOpenChange,
   onClearSavedApiKey,
   onCreateConversation,
+  onDeleteRecentApp,
   onGenerateName,
   onHideSidebar,
+  onOpenRecentApp,
   onRenameConversation,
   onRequireApiKey,
   onSelectConversation,
   onSubmitApiKey,
+  onToggleRecentAppFavorite,
 }: {
   conversations: Conversation[]
   activeConversationId: string
+  activeRecentAppId?: string
   apiKey: string
   hasSavedApiKey: boolean
   isApiKeyClearConfirming: boolean
   isApiKeySettingsOpen: boolean
   isCreatingSession: boolean
+  recentApps: RecentApp[]
   sessionError: string | null
   titleGenerationConversationIds: ReadonlySet<string>
   user: CurrentUser | null
@@ -2750,12 +2979,15 @@ function ConversationSidebar({
   onApiKeySettingsOpenChange: (open: boolean) => void
   onClearSavedApiKey: () => void
   onCreateConversation: () => void
+  onDeleteRecentApp: (recentAppId: string) => void
   onGenerateName: (conversationId: string) => void
   onHideSidebar: () => void
+  onOpenRecentApp: (recentApp: RecentApp) => void
   onRenameConversation: (conversationId: string, title: string) => void
   onRequireApiKey: () => void
   onSelectConversation: (conversationId: string) => void
   onSubmitApiKey: (event: FormEvent<HTMLFormElement>) => void
+  onToggleRecentAppFavorite: (recentAppId: string) => void
 }) {
   const [contextMenu, setContextMenu] = useState<ProjectContextMenuState | null>(
     null
@@ -2897,6 +3129,16 @@ function ConversationSidebar({
               <PanelLeftClose aria-hidden="true" />
             </Button>
           </div>
+          <RecentAppsList
+            activeRecentAppId={activeRecentAppId}
+            recentApps={recentApps}
+            onDeleteRecentApp={onDeleteRecentApp}
+            onOpenRecentApp={onOpenRecentApp}
+            onToggleRecentAppFavorite={onToggleRecentAppFavorite}
+          />
+          <p className="px-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/80">
+            Projects
+          </p>
           {conversations.map((conversation) => {
             const isActive = conversation.id === activeConversationId
             const isGeneratingName = titleGenerationConversationIds.has(
@@ -3854,7 +4096,8 @@ function parseModelSelectionValue(value: string): {
 class SessionRequestError extends Error {
   constructor(
     message: string,
-    readonly code?: string
+    readonly code?: string,
+    readonly status?: number
   ) {
     super(message)
   }
@@ -3862,6 +4105,13 @@ class SessionRequestError extends Error {
 
 function isMissingApiKeyError(error: unknown) {
   return error instanceof SessionRequestError && error.code === "missing_api_key"
+}
+
+function isUnknownSessionError(error: unknown) {
+  return (
+    error instanceof SessionRequestError &&
+    (error.code === "unknown_session" || error.status === 404)
+  )
 }
 
 async function requestSession(
@@ -3886,7 +4136,8 @@ async function requestSession(
   if (!response.ok) {
     throw new SessionRequestError(
       data.error ?? "Failed to create a session.",
-      data.code
+      data.code,
+      response.status
     )
   }
 
@@ -3898,6 +4149,10 @@ function getConversationById(
   conversationId: string
 ) {
   return conversations.find((conversation) => conversation.id === conversationId)
+}
+
+function getConversationRecentAppId(conversation: Conversation | undefined) {
+  return conversation?.session?.id ?? conversation?.restoringSessionId
 }
 
 function createRuntimeState(): ConversationRuntimeState {
@@ -3919,6 +4174,7 @@ function createEmptyConversation(title: string): Conversation {
     messages: [],
     input: "",
     model: fallbackModelSelection,
+    restoringSessionId: undefined,
     session: null,
   }
 }
@@ -4122,6 +4378,10 @@ function normalizePersistedConversation(value: unknown): Conversation | null {
       typeof conversation.model === "string"
         ? conversation.model
         : fallbackModelSelection,
+    restoringSessionId:
+      typeof conversation.restoringSessionId === "string"
+        ? conversation.restoringSessionId
+        : undefined,
     session: normalizeSession(conversation.session),
   }
 }
