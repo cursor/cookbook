@@ -337,12 +337,7 @@ async function runTask(
     ? `${upstreamContext}\n\n---\n\n${task.subtask_prompt}`
     : task.subtask_prompt;
 
-  const agent = await Agent.create({
-    apiKey: process.env.CURSOR_API_KEY!,
-    model: { id: ts.model },
-    local: { cwd },
-  });
-
+  let agent: Awaited<ReturnType<typeof Agent.create>> | undefined;
   let run: RunnerTaskRun | undefined;
   const buffer = new BoundedTextBuffer(STREAM_CAP);
   let lastPublishAt = 0;
@@ -357,6 +352,11 @@ async function runTask(
   const deadline = Date.now() + taskTimeoutMs;
 
   try {
+    agent = await Agent.create({
+      apiKey: process.env.CURSOR_API_KEY!,
+      model: { id: ts.model },
+      local: { cwd },
+    });
     run = (await agent.send(stitched)) as RunnerTaskRun;
     const iterator = run.stream()[Symbol.asyncIterator]();
     while (true) {
@@ -456,10 +456,12 @@ async function runTask(
       await bestEffortCancel(run, task.id);
     }
     publishIfDue(true);
-    try {
-      await (agent as unknown as AsyncDisposable)[Symbol.asyncDispose]();
-    } catch {
-      // ignore dispose errors
+    if (agent) {
+      try {
+        await (agent as unknown as AsyncDisposable)[Symbol.asyncDispose]();
+      } catch {
+        // ignore dispose errors
+      }
     }
     writer.schedule(structuredCloneState(state));
   }
