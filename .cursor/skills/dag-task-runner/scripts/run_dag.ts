@@ -55,6 +55,7 @@ interface RunnerTaskRun {
   stream: () => AsyncIterable<unknown>;
   wait: () => Promise<{
     status: string;
+    result?: string;
     durationMs?: number;
     usage?: { inputTokens?: number; outputTokens?: number };
   }>;
@@ -62,6 +63,8 @@ interface RunnerTaskRun {
   status?: string;
   durationMs?: number;
 }
+
+type RunnerAgent = Awaited<ReturnType<typeof Agent.create>>;
 
 function parseArgs(argv: string[]): CliArgs {
   const args: Record<string, string> = {};
@@ -157,7 +160,7 @@ async function main(): Promise<void> {
 
   if (!args.initOnly && !process.env.CURSOR_API_KEY) {
     throw new Error(
-      "CURSOR_API_KEY is not set. Export it or `set -a && source .env && set +a` first.",
+      "CURSOR_API_KEY is not set. Export it before launching the runner.",
     );
   }
 
@@ -337,12 +340,8 @@ async function runTask(
     ? `${upstreamContext}\n\n---\n\n${task.subtask_prompt}`
     : task.subtask_prompt;
 
-  const agent = await Agent.create({
-    apiKey: process.env.CURSOR_API_KEY!,
-    model: { id: ts.model },
-    local: { cwd },
-  });
-
+  let agent: RunnerAgent | undefined;
+  let disposeAgentOnCreate = false;
   let run: RunnerTaskRun | undefined;
   const buffer = new BoundedTextBuffer(STREAM_CAP);
   let lastPublishAt = 0;
@@ -357,7 +356,27 @@ async function runTask(
   const deadline = Date.now() + taskTimeoutMs;
 
   try {
-    run = (await agent.send(stitched)) as RunnerTaskRun;
+    const agentPromise = Agent.create({
+      apiKey: process.env.CURSOR_API_KEY!,
+      model: { id: ts.model },
+      local: { cwd },
+    });
+    void agentPromise.then(
+      (created) => {
+        if (disposeAgentOnCreate) void disposeAgent(created);
+      },
+      () => {},
+    );
+    agent = await withTaskDeadline(
+      agentPromise,
+      deadline,
+      `Task ${task.id} exceeded deadline while creating SDK agent`,
+    );
+    run = (await withTaskDeadline(
+      agent.send(stitched),
+      deadline,
+      `Task ${task.id} exceeded deadline while sending prompt`,
+    )) as RunnerTaskRun;
     const iterator = run.stream()[Symbol.asyncIterator]();
     while (true) {
       const timeoutForNext = Math.min(deadline - Date.now(), streamIdleTimeoutMs);
@@ -395,6 +414,7 @@ async function runTask(
     let result:
       | {
           status: string;
+          result?: string;
           durationMs?: number;
           usage?: { inputTokens?: number; outputTokens?: number };
         }
@@ -432,7 +452,7 @@ async function runTask(
     ts.durationMs = result.durationMs ?? ts.finishedAt - (ts.startedAt ?? ts.finishedAt);
     ts.inputTokens = result.usage?.inputTokens;
     ts.outputTokens = result.usage?.outputTokens;
-    const rendered = buffer.render().trim();
+    const rendered = buffer.render().trim() || renderCappedText(result.result);
     if (rendered) ts.resultText = rendered;
 
     if (result.status === "finished") {
@@ -442,6 +462,9 @@ async function runTask(
       ts.errorMessage = `Run ${result.status}`;
     }
   } catch (err) {
+    if (!agent) {
+      disposeAgentOnCreate = true;
+    }
     if (run && isTimeoutError(err)) {
       await bestEffortCancel(run, task.id);
     }
@@ -456,10 +479,10 @@ async function runTask(
       await bestEffortCancel(run, task.id);
     }
     publishIfDue(true);
-    try {
-      await (agent as unknown as AsyncDisposable)[Symbol.asyncDispose]();
-    } catch {
-      // ignore dispose errors
+    if (agent) {
+      await disposeAgent(agent);
+    } else {
+      disposeAgentOnCreate = true;
     }
     writer.schedule(structuredCloneState(state));
   }
@@ -533,6 +556,26 @@ async function withTimeout<T>(
   }
 }
 
+async function withTaskDeadline<T>(
+  promise: Promise<T>,
+  deadline: number,
+  timeoutMessage: string,
+): Promise<T> {
+  const timeoutMs = deadline - Date.now();
+  if (timeoutMs <= 0) {
+    throw new TimeoutError(timeoutMessage);
+  }
+  return withTimeout(promise, timeoutMs, timeoutMessage);
+}
+
+async function disposeAgent(agent: RunnerAgent): Promise<void> {
+  try {
+    await (agent as unknown as AsyncDisposable)[Symbol.asyncDispose]();
+  } catch {
+    // ignore dispose errors
+  }
+}
+
 async function bestEffortCancel(
   run: { cancel?: () => Promise<void> | void },
   taskId: string,
@@ -565,6 +608,13 @@ class BoundedTextBuffer {
     if (this.droppedChars === 0) return this.data;
     return `[...truncated ${this.droppedChars} earlier chars...]\n${this.data}`;
   }
+}
+
+function renderCappedText(text: string | undefined): string {
+  if (!text?.trim()) return "";
+  const buffer = new BoundedTextBuffer(STREAM_CAP);
+  buffer.append(text);
+  return buffer.render().trim();
 }
 
 function skipTask(
