@@ -1,0 +1,6 @@
+{
+  "environment": "lab",
+  "infrastructure": "docker",
+  "runtime": "local-docker",
+  "owner": "local-experiment"
+}

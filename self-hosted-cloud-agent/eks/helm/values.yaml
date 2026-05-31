@@ -1,0 +1,4 @@
+imageTag: 6c804a0
+
+env:
+  enableAuthManagement: true

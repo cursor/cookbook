@@ -4,7 +4,8 @@ A small example CLI that runs a Cursor SDK agent against a workspace. One-shot p
 
 ## Getting Started
 
-Use Node.js 22 or newer.
+Use Bun 1.3 or newer. This CLI is Bun-only because OpenTUI's native renderer
+is exposed through `bun:ffi`.
 
 Install dependencies:
 
@@ -21,13 +22,13 @@ export CURSOR_API_KEY="crsr_..."
 Ask for a one-shot task in the current directory:
 
 ```bash
-pnpm dev -- "Explain how this project is structured"
+bun run dev -- "Explain how this project is structured"
 ```
 
 Start the TUI by omitting the prompt:
 
 ```bash
-pnpm dev
+bun run dev
 ```
 
 ## Notes

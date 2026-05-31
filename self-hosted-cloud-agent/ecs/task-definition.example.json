@@ -1,0 +1,69 @@
+{
+  "family": "cursor-self-hosted-worker",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "2048",
+  "executionRoleArn": "arn:aws:iam::123456789012:role/cursor-worker-task-execution-role",
+  "taskRoleArn": "arn:aws:iam::123456789012:role/cursor-worker-task-role",
+  "containerDefinitions": [
+    {
+      "name": "worker",
+      "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/cursor-self-hosted-worker:latest",
+      "essential": true,
+      "environment": [
+        {
+          "name": "CURSOR_WORKER_POOL_NAME",
+          "value": "ecs-lab"
+        },
+        {
+          "name": "CURSOR_WORKER_IDLE_RELEASE_TIMEOUT",
+          "value": "600"
+        },
+        {
+          "name": "CURSOR_WORKER_MANAGEMENT_ADDR",
+          "value": "0.0.0.0:8080"
+        },
+        {
+          "name": "CURSOR_WORKER_DIR",
+          "value": "/workspace"
+        },
+        {
+          "name": "WORKER_REPOSITORY_URL",
+          "value": "https://github.com/OWNER/REPO.git"
+        },
+        {
+          "name": "CURSOR_WORKER_LABELS_JSON",
+          "value": "{\"environment\":\"lab\",\"infrastructure\":\"ecs\",\"runtime\":\"ecs-fargate\",\"owner\":\"local-experiment\"}"
+        }
+      ],
+      "secrets": [
+        {
+          "name": "CURSOR_API_KEY",
+          "valueFrom": "arn:aws:secretsmanager:us-east-1:123456789012:secret:cursor/service-account-api-key"
+        }
+      ],
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/healthz || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      },
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/cursor-self-hosted-worker",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "worker"
+        }
+      }
+    }
+  ]
+}

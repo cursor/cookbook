@@ -1,0 +1,40 @@
+.env
+.env.*
+!.env.example
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraform.lock.hcl
+
+# Kubernetes, AWS, and local secrets
+kubeconfig*
+*.kubeconfig
+.aws/
+.aws-sso/
+aws-exports.*
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+*.secret
+*.secrets
+secrets/
+credentials*
+
+# Local scratch
+.DS_Store
+tmp/
+scratch/
+logs/

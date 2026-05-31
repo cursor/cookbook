@@ -1,0 +1,85 @@
+apiVersion: workers.cursor.com/v1
+kind: WorkerDeployment
+metadata:
+  name: my-workers
+  namespace: cursord
+spec:
+  auth:
+    apiKeySecretRef:
+      name: my-workers-api-key
+      key: api-key
+    workerContainerName: worker
+  readyReplicas: 1
+  template:
+    metadata:
+      labels:
+        app: cursor-self-hosted-worker
+    spec:
+      initContainers:
+        - name: prepare-workspace
+          image: cursor-self-hosted-worker:local
+          command: ["/bin/bash", "-lc"]
+          env:
+            - name: WORKER_REPOSITORY_URL
+              value: https://github.com/example-org/example-repo.git
+          args:
+            - |
+              set -euo pipefail
+              git config --global --add safe.directory /workspace
+              if [[ ! -d /workspace/.git ]]; then
+                git init /workspace
+              fi
+              cd /workspace
+              git remote remove origin 2>/dev/null || true
+              git remote add origin "${WORKER_REPOSITORY_URL}"
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+      containers:
+        - name: worker
+          image: cursor-self-hosted-worker:local
+          command: ["agent"]
+          args:
+            - "worker"
+            - "--pool"
+            - "--pool-name"
+            - "lab"
+            - "--idle-release-timeout"
+            - "600"
+            - "--worker-dir"
+            - "/workspace"
+            - "--auth-token-file"
+            - "/var/run/cursor/token"
+            - "--management-addr"
+            - "0.0.0.0:8080"
+            - "--labels-file"
+            - "/etc/cursor/labels.json"
+            - "start"
+          ports:
+            - name: management
+              containerPort: 8080
+          volumeMounts:
+            - name: worker-labels
+              mountPath: /etc/cursor
+              readOnly: true
+            - name: workspace
+              mountPath: /workspace
+      volumes:
+        - name: worker-labels
+          configMap:
+            name: cursor-worker-labels
+        - name: workspace
+          emptyDir: {}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cursor-worker-labels
+  namespace: cursord
+data:
+  labels.json: |
+    {
+      "environment": "lab",
+      "runtime": "kubernetes",
+      "owner": "local-experiment"
+    }

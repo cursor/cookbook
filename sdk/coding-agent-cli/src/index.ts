@@ -1,7 +1,8 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 import path from "node:path"
+import { CliRenderEvents, type CliRenderer, createCliRenderer } from "@opentui/core"
+import { createRoot } from "@opentui/react"
 import React from "react"
-import { render } from "ink"
 
 import {
   CodingAgentSession,
@@ -51,19 +52,30 @@ async function main() {
     throw new Error("Interactive mode requires a TTY stdout.")
   }
 
-  const instance = render(
-    React.createElement(App, {
-      apiKey,
-      cwd: options.cwd,
-      force: options.force,
-      initialModel: { id: options.model },
-    }),
-    {
-      alternateScreen: true,
-      maxFps: 30,
+  const renderer = await createCliRenderer({
+    exitOnCtrlC: false,
+    maxFps: 30,
+    screenMode: "alternate-screen",
+  })
+  const root = createRoot(renderer)
+
+  try {
+    root.render(
+      React.createElement(App, {
+        apiKey,
+        cwd: options.cwd,
+        force: options.force,
+        initialModel: { id: options.model },
+      })
+    )
+    await waitUntilDestroyed(renderer)
+  } finally {
+    root.unmount()
+
+    if (!renderer.isDestroyed) {
+      renderer.destroy()
     }
-  )
-  await instance.waitUntilExit()
+  }
 }
 
 function parseArgs(argv: string[]): CliOptions {
@@ -232,6 +244,16 @@ async function readStdin() {
   }
 
   return input
+}
+
+function waitUntilDestroyed(renderer: CliRenderer) {
+  if (renderer.isDestroyed) {
+    return Promise.resolve()
+  }
+
+  return new Promise<void>((resolve) => {
+    renderer.once(CliRenderEvents.DESTROY, () => resolve())
+  })
 }
 
 function printHelp() {
