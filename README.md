@@ -20,6 +20,10 @@ A web app for spinning up agents to scaffold new projects and iterate on ideas i
 
 A kanban board for viewing Cursor Cloud Agents, grouping them by status or repository, previewing artifacts, and creating new cloud agents from a repository and prompt.
 
+### [Prompt design playground](sdk/prompt-design)
+
+A web app for composing agent instructions and user prompts, running them against a local Cursor agent, and iterating on the response.
+
 ### [Coding agent CLI](sdk/coding-agent-cli)
 
 A minimal command-line interface that lets you spawn Cursor agents from your terminal.
