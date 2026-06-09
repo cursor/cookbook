@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "hooks": {
+    "beforeSubmitPrompt": [
+      {
+        "command": "hooks/.cursor/hooks/audit-log.sh",
+        "matcher": "UserPromptSubmit",
+        "timeout": 5,
+        "failClosed": false
+      },
+      {
+        "command": "hooks/.cursor/hooks/block-models-by-repo-origin.sh",
+        "matcher": "UserPromptSubmit",
+        "timeout": 5,
+        "failClosed": true
+      },
+      {
+        "command": "hooks/.cursor/hooks/sensitive-prompt-guard.sh",
+        "matcher": "UserPromptSubmit",
+        "timeout": 5,
+        "failClosed": true
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "hooks/.cursor/hooks/audit-log.sh",
+        "timeout": 5,
+        "failClosed": false
+      }
+    ],
+    "afterShellExecution": [
+      {
+        "command": "hooks/.cursor/hooks/audit-log.sh",
+        "timeout": 5,
+        "failClosed": false
+      }
+    ],
+    "afterFileEdit": [
+      {
+        "command": "hooks/.cursor/hooks/audit-log.sh",
+        "timeout": 5,
+        "failClosed": false
+      }
+    ],
+    "stop": [
+      {
+        "command": "node hooks/.cursor/hooks/update-skills-on-stop.mjs",
+        "timeout": 10,
+        "loop_limit": 1,
+        "failClosed": false
+      }
+    ]
+  }
+}
