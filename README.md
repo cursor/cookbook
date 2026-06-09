@@ -2,6 +2,14 @@
 
 This repo contains small examples for building with Cursor.
 
+## Cursor Hooks
+
+Cursor Hooks let you run custom checks and workflows around agent events such as prompt submission, shell commands, file edits, and agent completion.
+
+### [Hooks examples](hooks)
+
+A guided project hook setup for audit logging, sensitive prompt guards, and follow-up checks that keep Cursor skills aligned with code changes.
+
 ## Cloud Agents
 
 ### [Self-hosted Cloud Agents lab](cloud-agent)
