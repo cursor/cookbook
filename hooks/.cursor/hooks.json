@@ -3,12 +3,6 @@
   "hooks": {
     "beforeSubmitPrompt": [
       {
-        "command": "hooks/.cursor/hooks/audit-log.sh",
-        "matcher": "UserPromptSubmit",
-        "timeout": 5,
-        "failClosed": false
-      },
-      {
         "command": "hooks/.cursor/hooks/block-models-by-repo-origin.sh",
         "matcher": "UserPromptSubmit",
         "timeout": 5,
@@ -19,6 +13,12 @@
         "matcher": "UserPromptSubmit",
         "timeout": 5,
         "failClosed": true
+      },
+      {
+        "command": "hooks/.cursor/hooks/audit-log.sh",
+        "matcher": "UserPromptSubmit",
+        "timeout": 5,
+        "failClosed": false
       }
     ],
     "beforeShellExecution": [
