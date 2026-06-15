@@ -12,7 +12,7 @@ A guided project hook setup for audit logging, sensitive prompt guards, and foll
 
 ## Cloud Agents
 
-### [Self-hosted Cloud Agents lab](cloud-agent)
+### [Self-hosted Cloud Agents lab](self-hosted-cloud-agent)
 
 Run Cursor Cloud Agent workers on customer-managed AWS infrastructure with examples for EC2 + Docker, ECS/Fargate, and EKS + Helm.
 
