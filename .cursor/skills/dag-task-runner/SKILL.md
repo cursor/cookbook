@@ -1,6 +1,7 @@
 ---
 name: dag-task-runner
 description: Decompose a user's task into a DAG of subtasks and execute them with Cursor SDK local subagents in topological order, rendering live streaming status to a canvas. Each task has a complexity (HIGH/MED/LOW) that maps to a model. Use when the user asks to fan out work, decompose a task into a DAG, run subagents in parallel, or break a large task into a dependency graph.
+disable-model-invocation: true
 ---
 
 # DAG Task Runner
