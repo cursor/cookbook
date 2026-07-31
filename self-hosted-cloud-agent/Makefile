@@ -4,12 +4,7 @@ SHELL := /bin/bash
 export
 
 WORKER_IMAGE ?= cursor-self-hosted-worker:local
-K8S_WORKER_IMAGE ?= $(WORKER_IMAGE)
-K8S_NAMESPACE ?= cursord
-WORKER_DEPLOYMENT_NAME ?= my-workers
 CURSOR_API_KEY_SECRET_NAME ?= my-workers-api-key
-K8S_WORKER_LABELS_FILE ?= eks/helm/labels.json
-K8S_WORKER_LABELS_CONFIG_MAP ?= cursor-worker-labels
 AWS_PROFILE ?= default
 AWS_REGION ?= us-east-1
 ECR_REPOSITORY_NAME ?= cursor-self-hosted-worker
@@ -33,7 +28,7 @@ EC2_TERRAFORM_VARS := \
 	-var "worker_repository_url=$(WORKER_REPOSITORY_URL)" \
 	-var "cursor_api_key_secret_name=$(CURSOR_API_KEY_SECRET_NAME)"
 
-.PHONY: help docker-build docker-run ecr-login ecr-build-push ec2-put-api-key-secret helm-install-controller helm-create-api-key-secret helm-render helm-apply helm-install-autoscaling helm-render-autoscaling helm-delete-autoscaling helm-delete k8s-create-api-key-secret k8s-apply k8s-delete ec2-terraform-init ec2-terraform-plan ec2-terraform-apply terraform-init terraform-plan
+.PHONY: help docker-build docker-run ecr-login ecr-build-push ec2-put-api-key-secret ec2-terraform-init ec2-terraform-plan ec2-terraform-apply terraform-init terraform-plan
 
 help:
 	@echo "Targets:"
@@ -42,14 +37,6 @@ help:
 	@echo "  ecr-login                     Authenticate Docker to ECR"
 	@echo "  ecr-build-push                Build and push the worker image to ECR"
 	@echo "  ec2-put-api-key-secret        Upload CURSOR_API_KEY to the EC2 Secrets Manager secret"
-	@echo "  helm-install-controller       Install or upgrade the Cursor worker controller"
-	@echo "  helm-create-api-key-secret    Create the Cursor service account API key secret"
-	@echo "  helm-render                   Render the example WorkerDeployment"
-	@echo "  helm-apply                    Apply Helm approach manifests"
-	@echo "  helm-install-autoscaling      Install Prometheus and apply metrics autoscaling"
-	@echo "  helm-render-autoscaling       Render autoscaling manifests"
-	@echo "  helm-delete-autoscaling       Delete autoscaling manifests"
-	@echo "  helm-delete                   Delete the example WorkerDeployment"
 	@echo "  ec2-terraform-init            Initialize the EC2 Terraform scaffold"
 	@echo "  ec2-terraform-plan            Plan the EC2 Terraform deployment"
 	@echo "  ec2-terraform-apply           Apply the EC2 Terraform deployment"
@@ -85,36 +72,6 @@ ec2-put-api-key-secret:
 		--secret-id "$(CURSOR_API_KEY_SECRET_NAME)" \
 		--secret-string "$${CURSOR_API_KEY}" >/dev/null
 	@echo "Updated Secrets Manager value for $(CURSOR_API_KEY_SECRET_NAME)."
-
-helm-install-controller:
-	./eks/helm/scripts/install-controller.sh
-
-helm-create-api-key-secret:
-	./eks/helm/scripts/create-api-key-secret.sh
-
-helm-render:
-	@./eks/helm/scripts/render-worker-deployment.sh
-
-helm-apply:
-	./eks/helm/scripts/apply-worker-deployment.sh
-
-helm-install-autoscaling:
-	./eks/helm/scripts/install-autoscaling.sh
-
-helm-render-autoscaling:
-	@./eks/helm/scripts/render-autoscaling.sh
-
-helm-delete-autoscaling:
-	./eks/helm/scripts/delete-autoscaling.sh
-
-helm-delete:
-	./eks/helm/scripts/delete-worker-deployment.sh
-
-k8s-create-api-key-secret: helm-create-api-key-secret
-
-k8s-apply: helm-apply
-
-k8s-delete: helm-delete
 
 ec2-terraform-init:
 	terraform -chdir=ec2/terraform init
