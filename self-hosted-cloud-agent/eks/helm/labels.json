@@ -1,6 +1,0 @@
-{
-  "environment": "lab",
-  "infrastructure": "eks",
-  "runtime": "kubernetes",
-  "owner": "local-experiment"
-}
