@@ -42,4 +42,8 @@ A minimal command-line interface that lets you spawn Cursor agents from your ter
 
 Decompose a task into a JSON DAG, fan it out across local subagents, and stream live status into a Cursor Canvas that hot-reloads on every state change. Ships as both a runnable example and a copyable Cursor skill at [`.cursor/skills/dag-task-runner`](.cursor/skills/dag-task-runner).
 
-Learn more in the [Cursor SDK TypeScript docs](https://cursor.com/docs/api/sdk/typescript).
+### [Perl bridge adapter](sdk/perl-bridge-adapter)
+
+A miniature Cursor SDK in Perl on the open [`sdk.v1` bridge](https://github.com/cursor/sdk-bridge). Shows how to spawn `cursor-sdk-bridge`, speak Connect JSON, and run one local agent turn without a first-party SDK.
+
+Learn more in the [Cursor SDK TypeScript docs](https://cursor.com/docs/sdk/typescript) and the [SDK Bridge docs](https://cursor.com/docs/sdk/bridge).
