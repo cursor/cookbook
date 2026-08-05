@@ -31,7 +31,6 @@ $client->shutdown;
 | :--- | :--- |
 | `lib/CursorSdk.pm` | Bridge manager, Connect JSON transport, `Client` / `Agent` / `Run` |
 | `demo.pl` | One local agent turn, same shape as the TypeScript quickstart |
-| `smoke.pl` | Offline handshake + `Ping` / `GetVersion` / shutdown |
 
 ## Getting started
 
@@ -42,8 +41,7 @@ python3 -m venv .venv
 .venv/bin/pip install cursor-sdk
 export CURSOR_SDK_BRIDGE_BIN="$(.venv/bin/python -c 'from cursor_sdk._vendor import resolve_bridge_path; print(resolve_bridge_path())')"
 
-chmod +x demo.pl smoke.pl
-./smoke.pl                 # no API key needed
+chmod +x demo.pl
 ```
 
 Set a Cursor API key from the [dashboard](https://cursor.com/dashboard/integrations), then run a turn against the cookbook repo:
