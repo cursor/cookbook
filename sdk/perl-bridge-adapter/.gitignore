@@ -1,3 +1,4 @@
 /cursor-sdk-bridge/
+/.bridge-venv/
 /*.err.log
 *.tar.gz

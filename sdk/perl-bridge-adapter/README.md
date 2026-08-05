@@ -32,11 +32,11 @@ $client->shutdown;
 | `lib/CursorSdk.pm` | Bridge manager, Connect JSON transport, `Client` / `Agent` / `Run` |
 | `demo.pl` | One local agent turn, same shape as the TypeScript quickstart |
 | `smoke.pl` | Offline handshake + `Ping` / `GetVersion` / shutdown |
-| `fetch-bridge.sh` | Downloads the standalone `cursor-sdk-bridge` binary |
+| `fetch-bridge.sh` | Installs the `cursor-sdk` wheel and links its bundled `cursor-sdk-bridge` |
 
 ## Getting started
 
-Perl 5.14 or newer (macOS and most Linux distros already have it).
+Perl 5.14 or newer, plus Python 3.10+ for the bundled bridge binary.
 
 ```bash
 chmod +x fetch-bridge.sh demo.pl smoke.pl
@@ -64,5 +64,6 @@ Optional environment:
 
 - The bridge speaks HTTP/1.1 Connect only. Classic gRPC clients will not connect.
 - This adapter uses JSON (`application/json` and `application/connect+json`) instead of protobuf codegen so the wire format stays visible.
+- `fetch-bridge.sh` uses the bridge binary from the `cursor-sdk` wheel. The GitHub standalone archive can ping, but local `CreateAgent` currently returns an internal 500.
 - Protocol details and the adapter build guide live in [`cursor/sdk-bridge`](https://github.com/cursor/sdk-bridge).
 - See also the [SDK Bridge docs](https://cursor.com/docs/sdk/bridge).
