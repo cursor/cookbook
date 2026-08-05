@@ -32,15 +32,17 @@ $client->shutdown;
 | `lib/CursorSdk.pm` | Bridge manager, Connect JSON transport, `Client` / `Agent` / `Run` |
 | `demo.pl` | One local agent turn, same shape as the TypeScript quickstart |
 | `smoke.pl` | Offline handshake + `Ping` / `GetVersion` / shutdown |
-| `fetch-bridge.sh` | Installs the `cursor-sdk` wheel and links its bundled `cursor-sdk-bridge` |
 
 ## Getting started
 
-Perl 5.14 or newer, plus Python 3.10+ for the bundled bridge binary.
+Perl 5.14+ and Python 3.10+ (for the bridge binary inside `cursor-sdk`).
 
 ```bash
-chmod +x fetch-bridge.sh demo.pl smoke.pl
-./fetch-bridge.sh          # or: ./fetch-bridge.sh 1.0.26
+python3 -m venv .venv
+.venv/bin/pip install cursor-sdk
+export CURSOR_SDK_BRIDGE_BIN="$(.venv/bin/python -c 'from cursor_sdk._vendor import resolve_bridge_path; print(resolve_bridge_path())')"
+
+chmod +x demo.pl smoke.pl
 ./smoke.pl                 # no API key needed
 ```
 
@@ -58,12 +60,12 @@ Optional environment:
 | `CURSOR_WORKSPACE` | Local agent cwd (default: cookbook repo root) |
 | `CURSOR_PROMPT` | Prompt to send |
 | `CURSOR_MODEL` | Model id; otherwise the first catalog entry |
-| `CURSOR_SDK_BRIDGE_BIN` | Path to an existing bridge executable |
+| `CURSOR_SDK_BRIDGE_BIN` | Path to `cursor-sdk-bridge` (required unless `./cursor-sdk-bridge/bin/cursor-sdk-bridge` exists) |
 
 ## Notes
 
 - The bridge speaks HTTP/1.1 Connect only. Classic gRPC clients will not connect.
 - This adapter uses JSON (`application/json` and `application/connect+json`) instead of protobuf codegen so the wire format stays visible.
-- `fetch-bridge.sh` uses the bridge binary from the `cursor-sdk` wheel. The GitHub standalone archive can ping, but local `CreateAgent` currently returns an internal 500.
+- Use the bridge from the `cursor-sdk` wheel. The GitHub standalone archive can ping, but local `CreateAgent` currently returns an internal 500.
 - Protocol details and the adapter build guide live in [`cursor/sdk-bridge`](https://github.com/cursor/sdk-bridge).
 - See also the [SDK Bridge docs](https://cursor.com/docs/sdk/bridge).
