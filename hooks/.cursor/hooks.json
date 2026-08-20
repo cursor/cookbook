@@ -35,6 +35,13 @@
         "failClosed": false
       }
     ],
+    "afterMCPExecution": [
+      {
+        "command": "node hooks/.cursor/hooks/audit-mcp-execution.mjs",
+        "timeout": 5,
+        "failClosed": false
+      }
+    ],
     "afterFileEdit": [
       {
         "command": "hooks/.cursor/hooks/audit-log.sh",
