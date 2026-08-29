@@ -184,14 +184,23 @@ export async function* watchStream<T extends StreamEvent>(
     wake?.()
   })
 
-  const readNext = () =>
-    iterator.next().then(
-      (result) => ({ kind: "message" as const, result }),
-      (error: unknown) => ({ kind: "error" as const, error }),
+  let reading = false
+  const readNext = () => {
+    reading = true
+    return iterator.next().then(
+      (result) => {
+        reading = false
+        return { kind: "message" as const, result }
+      },
+      (error: unknown) => {
+        reading = false
+        return { kind: "error" as const, error }
+      },
     )
+  }
 
+  let next = readNext()
   try {
-    let next = readNext()
     for (;;) {
       if (pending.length > 0) {
         yield pending.shift()!
@@ -228,7 +237,12 @@ export async function* watchStream<T extends StreamEvent>(
     }
   } finally {
     unsub()
-    await iterator.return?.()
+    // return() queues behind in-flight next() and hangs on a stalled reconnect.
+    if (reading) {
+      void next.then(() => iterator.return?.())
+    } else {
+      await iterator.return?.()
+    }
   }
 }
 

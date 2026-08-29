@@ -198,3 +198,38 @@ test("watchStream closes the underlying iterator when the consumer stops early",
 
   assert.equal(closed, true)
 })
+
+test("watchStream cleanup does not hang if the consumer stops during RETRYING", async () => {
+  const hub = createConnectionStateHub()
+  const stream = (async function* () {
+    yield {
+      type: "status" as const,
+      agent_id: "agent-1",
+      run_id: "run-1",
+      status: "RUNNING" as const,
+    }
+    await new Promise(() => {})
+  })()
+
+  const events = watchStream(stream, hub)
+  const first = await events.next()
+  assert.equal(
+    first.value && "status" in first.value ? first.value.status : undefined,
+    "RUNNING",
+  )
+
+  const waiting = events.next()
+  hub.notify({ state: "reconnecting", attempt: 1 })
+  const retrying = await waiting
+  assert.equal(
+    retrying.value && "status" in retrying.value ? retrying.value.status : undefined,
+    "RETRYING",
+  )
+
+  await Promise.race([
+    events.return(),
+    delay(100).then(() => {
+      throw new Error("cleanup hung")
+    }),
+  ])
+})
