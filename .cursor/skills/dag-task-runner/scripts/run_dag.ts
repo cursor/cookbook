@@ -30,6 +30,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
 
+import { isTimeoutError, TimeoutError, withIdleTimeout } from "./idle_timeout.js";
 import { parseDAG, computeRanks, createModelResolver, validateModelMap } from "./dag.js";
 import type { ModelMapOverride, RawTask } from "./dag.js";
 import {
@@ -337,10 +338,18 @@ async function runTask(
     ? `${upstreamContext}\n\n---\n\n${task.subtask_prompt}`
     : task.subtask_prompt;
 
+  let reconnecting = false;
+  const local = {
+    cwd,
+    enableAgentRetries: true as const,
+    onConnectionStateChange: (event: { state: string }) => {
+      reconnecting = event.state === "reconnecting";
+    },
+  };
   const agent = await Agent.create({
     apiKey: process.env.CURSOR_API_KEY!,
     model: { id: ts.model },
-    local: { cwd },
+    local,
   });
 
   let run: RunnerTaskRun | undefined;
@@ -360,19 +369,22 @@ async function runTask(
     run = (await agent.send(stitched)) as RunnerTaskRun;
     const iterator = run.stream()[Symbol.asyncIterator]();
     while (true) {
-      const timeoutForNext = Math.min(deadline - Date.now(), streamIdleTimeoutMs);
-      if (timeoutForNext <= 0) {
+      const remainingDeadline = deadline - Date.now();
+      if (remainingDeadline <= 0) {
         throw new TimeoutError(`Task ${task.id} exceeded deadline of ${formatMs(taskTimeoutMs)}`);
       }
-      const next = await withTimeout(
-        iterator.next(),
-        timeoutForNext,
-        streamWaitTimeoutMessage({
+      const timeoutForNext = Math.min(remainingDeadline, streamIdleTimeoutMs);
+      const next = await withIdleTimeout(iterator.next(), {
+        idleMs: timeoutForNext,
+        deadline,
+        isRetrying: () => reconnecting,
+        idleMessage: streamWaitTimeoutMessage({
           taskId: task.id,
           timeoutMs: timeoutForNext,
           streamIdleTimeoutMs,
         }),
-      );
+        deadlineMessage: `Task ${task.id} exceeded deadline of ${formatMs(taskTimeoutMs)}`,
+      });
       if (next.done) break;
       const event = next.value as {
         type?: string;
@@ -404,11 +416,12 @@ async function runTask(
       throw new TimeoutError(`Task ${task.id} exceeded deadline of ${formatMs(taskTimeoutMs)}`);
     }
     try {
-      result = await withTimeout(
-        run.wait(),
-        waitGraceMs,
-        `Task ${task.id} did not finalize within ${formatMs(waitGraceMs)} after stream completion`,
-      );
+      result = await withIdleTimeout(run.wait(), {
+        idleMs: waitGraceMs,
+        deadline: Date.now() + waitGraceMs,
+        idleMessage: `Task ${task.id} did not finalize within ${formatMs(waitGraceMs)} after stream completion`,
+        deadlineMessage: `Task ${task.id} did not finalize within ${formatMs(waitGraceMs)} after stream completion`,
+      });
     } catch (waitErr) {
       if (
         isTimeoutError(waitErr) &&
@@ -486,17 +499,6 @@ const UPSTREAM_SNIPPET_CAP = 2000;
 /** Raised listener ceiling to avoid false-positive AbortSignal warnings from SDK internals. */
 const ABORT_SIGNAL_LISTENER_LIMIT = 100;
 
-class TimeoutError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "TimeoutError";
-  }
-}
-
-function isTimeoutError(err: unknown): boolean {
-  return err instanceof TimeoutError;
-}
-
 interface StreamWaitTimeoutMessageOptions {
   taskId: string;
   timeoutMs: number;
@@ -513,24 +515,6 @@ function streamWaitTimeoutMessage({
     return `Task ${taskId} produced no stream events within ${effectiveTimeout} before the task deadline (configured stream idle timeout: ${formatMs(streamIdleTimeoutMs)})`;
   }
   return `Task ${taskId} produced no stream events within ${effectiveTimeout}`;
-}
-
-async function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  timeoutMessage: string,
-): Promise<T> {
-  let timer: NodeJS.Timeout | undefined;
-  try {
-    return await Promise.race([
-      promise,
-      new Promise<T>((_, reject) => {
-        timer = setTimeout(() => reject(new TimeoutError(timeoutMessage)), timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
 }
 
 async function bestEffortCancel(

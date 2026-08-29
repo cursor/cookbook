@@ -136,7 +136,7 @@ Precedence is defaults < DAG `models` < `--models-file`. The Cursor SDK model ca
 | `--debounce`                | `200` ms             | Canvas write debounce interval.                                                     |
 | `--task-timeout-ms`         | `1200000` (20 min)   | Marks a task `ERROR` if it exceeds this duration.                                  |
 | `--stream-publish-ms`       | `500` ms             | Throttles live canvas streaming writes.                                             |
-| `--stream-idle-timeout-ms`  | `300000` (5 min)     | Marks a task `ERROR` if no stream events arrive within this window.                |
+| `--stream-idle-timeout-ms`  | `300000` (5 min)     | Marks a task `ERROR` if no stream events arrive within this window. Paused while the SDK is reconnecting. |
 
 ## Copy as a Cursor skill
 
