@@ -67,7 +67,7 @@ const AGENT_INSTRUCTIONS = [
 ].join("\n")
 
 export class CodingAgentSession {
-  private agent: SDKAgent
+  private agent: SDKAgent | Promise<SDKAgent>
   private agentKey: string
   private cloudRepository: CloudRepository | null = null
   private currentRun: Run | null = null
@@ -141,7 +141,7 @@ export class CodingAgentSession {
   }
 
   async dispose() {
-    await this.agent[Symbol.asyncDispose]()
+    await (await this.agent)[Symbol.asyncDispose]()
   }
 
   async cancelCurrentRun(): Promise<CancelRunResult> {
@@ -165,7 +165,7 @@ export class CodingAgentSession {
   async sendPrompt({ prompt, onEvent }: SendPromptOptions) {
     await this.ensureAgentFresh()
 
-    const run = await this.agent.send(buildPrompt(prompt), {
+    const run = await (await this.agent).send(buildPrompt(prompt), {
       ...(this.mode === "local" ? { model: this.modelSelection } : {}),
       ...(this.mode === "local" && this.force ? { local: { force: true } } : {}),
     })
@@ -231,7 +231,7 @@ export class CodingAgentSession {
     const previousAgent = this.agent
     this.agent = this.createAgent()
     this.agentKey = this.currentAgentKey()
-    await previousAgent[Symbol.asyncDispose]()
+    await (await previousAgent)[Symbol.asyncDispose]()
   }
 
   private currentAgentKey() {

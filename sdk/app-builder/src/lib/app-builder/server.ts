@@ -334,7 +334,7 @@ async function promptProjectNameWithXml(
     }, getProjectNameTimeoutMs())
   })
 
-  const agent = Agent.create({
+  const agent = await Agent.create({
     apiKey,
     model: { id: process.env.CURSOR_PROJECT_NAME_MODEL ?? "composer-2" },
   })
