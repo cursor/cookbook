@@ -134,3 +134,67 @@ test("watchStream yields RETRYING when the hub reports a reconnect", async () =>
 
   assert.deepEqual(seen, ["RUNNING", "RETRYING", "RUNNING"])
 })
+
+test("watchStream does not leak an unhandled rejection when reconnect wins and the stream later fails", async () => {
+  const hub = createConnectionStateHub()
+  const leaked: unknown[] = []
+  const onUnhandled = (reason: unknown) => {
+    leaked.push(reason)
+  }
+  process.on("unhandledRejection", onUnhandled)
+
+  try {
+    const stream = (async function* () {
+      yield {
+        type: "status" as const,
+        agent_id: "agent-1",
+        run_id: "run-1",
+        status: "RUNNING" as const,
+      }
+      await delay(20)
+      hub.notify({ state: "reconnecting", attempt: 1 })
+      await delay(20)
+      throw new Error("transport failed")
+    })()
+
+    await assert.rejects(
+      async () => {
+        for await (const event of watchStream(stream, hub)) {
+          void event
+        }
+      },
+      { message: "transport failed" },
+    )
+
+    await delay(30)
+    assert.equal(leaked.length, 0)
+  } finally {
+    process.off("unhandledRejection", onUnhandled)
+  }
+})
+
+test("watchStream closes the underlying iterator when the consumer stops early", async () => {
+  const hub = createConnectionStateHub()
+  let closed = false
+  const stream = (async function* () {
+    try {
+      yield {
+        type: "status" as const,
+        agent_id: "agent-1",
+        run_id: "run-1",
+        status: "RUNNING" as const,
+      }
+      await new Promise(() => {})
+    } finally {
+      closed = true
+    }
+  })()
+
+  for await (const event of watchStream(stream, hub)) {
+    if (event.status === "RUNNING") {
+      break
+    }
+  }
+
+  assert.equal(closed, true)
+})

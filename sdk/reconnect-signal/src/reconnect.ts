@@ -184,8 +184,14 @@ export async function* watchStream<T extends StreamEvent>(
     wake?.()
   })
 
+  const readNext = () =>
+    iterator.next().then(
+      (result) => ({ kind: "message" as const, result }),
+      (error: unknown) => ({ kind: "error" as const, error }),
+    )
+
   try {
-    let next = iterator.next()
+    let next = readNext()
     for (;;) {
       if (pending.length > 0) {
         yield pending.shift()!
@@ -196,12 +202,15 @@ export async function* watchStream<T extends StreamEvent>(
         wake = resolve
       })
       const winner = await Promise.race([
-        next.then((result) => ({ kind: "message" as const, result })),
+        next,
         signaled.then(() => ({ kind: "signal" as const })),
       ])
 
       if (winner.kind === "signal") {
         continue
+      }
+      if (winner.kind === "error") {
+        throw winner.error
       }
       if (winner.result.done) {
         break
@@ -211,7 +220,7 @@ export async function* watchStream<T extends StreamEvent>(
       agentId = value.agent_id ?? agentId
       runId = value.run_id ?? runId
       yield value
-      next = iterator.next()
+      next = readNext()
     }
 
     while (pending.length > 0) {
@@ -219,6 +228,7 @@ export async function* watchStream<T extends StreamEvent>(
     }
   } finally {
     unsub()
+    await iterator.return?.()
   }
 }
 
