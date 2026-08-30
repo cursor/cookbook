@@ -36,6 +36,7 @@ export function interpretSdkLog(line: string): SdkReconnectSignal | undefined {
  *
  * One reconnect logs `decision=RETRY` per failed attempt and a single terminal
  * line, so in-flight state is keyed by `originalRequestId` rather than counted.
+ * An unlabeled success/THROW log only closes a sole in-flight reconnect.
  */
 export function createSdkReconnectProbe(): {
   isRetrying: () => boolean;
@@ -52,11 +53,17 @@ export function createSdkReconnectProbe(): {
       inflight.add(key);
       return;
     }
-    if (key === ANON) {
-      inflight.clear();
+    if (key !== ANON) {
+      inflight.delete(key);
       return;
     }
-    inflight.delete(key);
+    if (inflight.has(ANON)) {
+      inflight.delete(ANON);
+      return;
+    }
+    if (inflight.size === 1) {
+      inflight.clear();
+    }
   };
 
   const inspect = (args: unknown[]): void => {

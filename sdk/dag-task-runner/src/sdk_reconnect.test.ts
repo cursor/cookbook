@@ -113,3 +113,68 @@ test("overlapping reconnects on different originalRequestIds stay independent", 
     stop();
   }
 });
+
+test("anonymous Request successful does not clear sibling reconnects", () => {
+  const probe = createSdkReconnectProbe();
+  const stop = probe.install();
+  try {
+    console.warn(
+      "[AGENT_ERROR_DIAGNOSTICS] requestId=a originalRequestId=run-a decision=RETRY (countAsServerError=1)",
+    );
+    console.warn(
+      "[AGENT_ERROR_DIAGNOSTICS] requestId=b originalRequestId=run-b decision=RETRY (countAsTransportError=1)",
+    );
+    console.log("[nal_agent_retries] Request successful");
+    assert.equal(probe.isRetrying(), true);
+    console.warn(
+      "[AGENT_ERROR_DIAGNOSTICS] requestId=a2 originalRequestId=run-a decision=THROW stall",
+    );
+    assert.equal(probe.isRetrying(), true);
+    console.log("[nal_agent_retries] Request successful originalRequestId=run-b");
+    assert.equal(probe.isRetrying(), false);
+  } finally {
+    stop();
+  }
+});
+
+test("anonymous Error not retryable does not clear sibling reconnects", () => {
+  const probe = createSdkReconnectProbe();
+  const stop = probe.install();
+  try {
+    console.warn(
+      "[AGENT_ERROR_DIAGNOSTICS] requestId=a originalRequestId=run-a decision=RETRY (countAsServerError=1)",
+    );
+    console.warn(
+      "[AGENT_ERROR_DIAGNOSTICS] requestId=b originalRequestId=run-b decision=RETRY (countAsTransportError=1)",
+    );
+    console.warn("[nal_agent_retries] Error not retryable");
+    assert.equal(probe.isRetrying(), true);
+    console.warn(
+      "[AGENT_ERROR_DIAGNOSTICS] requestId=b2 originalRequestId=run-b decision=THROW stall",
+    );
+    assert.equal(probe.isRetrying(), true);
+    console.warn(
+      "[AGENT_ERROR_DIAGNOSTICS] requestId=a2 originalRequestId=run-a decision=THROW stall",
+    );
+    assert.equal(probe.isRetrying(), false);
+  } finally {
+    stop();
+  }
+});
+
+test("unlabeled success still clears a sole in-flight reconnect", () => {
+  const probe = createSdkReconnectProbe();
+  const stop = probe.install();
+  try {
+    console.warn(
+      "[AGENT_ERROR_DIAGNOSTICS] requestId=a1 originalRequestId=run-1 decision=RETRY (countAsTransportError=1)",
+    );
+    console.warn(
+      "[AGENT_ERROR_DIAGNOSTICS] requestId=a2 originalRequestId=run-1 decision=RETRY (countAsTransportError=1)",
+    );
+    console.log("[nal_agent_retries] Request successful");
+    assert.equal(probe.isRetrying(), false);
+  } finally {
+    stop();
+  }
+});
