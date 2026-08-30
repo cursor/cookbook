@@ -1,11 +1,24 @@
 const ANSI = /\u001B\[[0-9;]*m/g;
+const ANON = "*";
 
 export type SdkReconnectSignal = "reconnecting" | "connected";
 
+function stripAnsi(line: string): string {
+  return line.replace(ANSI, "");
+}
+
+function requestKey(text: string): string {
+  const match = text.match(/originalRequestId[=:\s"']+([^\s"',}]+)/);
+  return match?.[1] ?? ANON;
+}
+
 export function interpretSdkLog(line: string): SdkReconnectSignal | undefined {
-  const text = line.replace(ANSI, "");
+  const text = stripAnsi(line);
   if (text.includes("[AGENT_ERROR_DIAGNOSTICS]") && /decision=RETRY\b/.test(text)) {
     return "reconnecting";
+  }
+  if (text.includes("[AGENT_ERROR_DIAGNOSTICS]") && /decision=THROW\b/.test(text)) {
+    return "connected";
   }
   if (text.includes("[nal_agent_retries] Request successful")) {
     return "connected";
@@ -20,29 +33,38 @@ export function interpretSdkLog(line: string): SdkReconnectSignal | undefined {
  * `@cursor/sdk` retries transport stalls internally and does not forward
  * `onConnectionStateChange` on `local`. Watch the retry logs it already prints
  * so the idle timeout can pause during reconnect.
+ *
+ * One reconnect logs `decision=RETRY` per failed attempt and a single terminal
+ * line, so in-flight state is keyed by `originalRequestId` rather than counted.
  */
 export function createSdkReconnectProbe(): {
   isRetrying: () => boolean;
   install: () => () => void;
 } {
-  let depth = 0;
+  const inflight = new Set<string>();
 
-  const note = (signal: SdkReconnectSignal | undefined): void => {
+  const note = (line: string): void => {
+    const text = stripAnsi(line);
+    const signal = interpretSdkLog(text);
+    if (signal === undefined) return;
+    const key = requestKey(text);
     if (signal === "reconnecting") {
-      depth += 1;
+      inflight.add(key);
       return;
     }
-    if (signal === "connected" && depth > 0) {
-      depth -= 1;
+    if (key === ANON) {
+      inflight.clear();
+      return;
     }
+    inflight.delete(key);
   };
 
   const inspect = (args: unknown[]): void => {
-    note(interpretSdkLog(args.map(String).join(" ")));
+    note(args.map(String).join(" "));
   };
 
   return {
-    isRetrying: () => depth > 0,
+    isRetrying: () => inflight.size > 0,
     install: () => {
       const { log, warn, info } = console;
       console.log = (...args: unknown[]) => {

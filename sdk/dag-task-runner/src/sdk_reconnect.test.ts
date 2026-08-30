@@ -15,12 +15,12 @@ test("treats AGENT_ERROR_DIAGNOSTICS RETRY as reconnecting", () => {
   );
 });
 
-test("ignores AGENT_ERROR_DIAGNOSTICS THROW", () => {
+test("treats AGENT_ERROR_DIAGNOSTICS THROW as connected", () => {
   assert.equal(
     interpretSdkLog(
       "WARN  [AGENT_ERROR_DIAGNOSTICS] requestId=abc originalRequestId=def decision=THROW stall",
     ),
-    undefined,
+    "connected",
   );
 });
 
@@ -60,16 +60,54 @@ test("probe pauses while SDK retry logs are in flight", () => {
   }
 });
 
-test("probe refcounts overlapping reconnects from parallel tasks", () => {
+test("one reconnect with extra RETRY attempts clears on a single success", () => {
   const probe = createSdkReconnectProbe();
   const stop = probe.install();
   try {
-    console.warn("[AGENT_ERROR_DIAGNOSTICS] decision=RETRY (countAsServerError=1)");
-    console.warn("[AGENT_ERROR_DIAGNOSTICS] decision=RETRY (countAsTransportError=1)");
+    console.warn(
+      "[AGENT_ERROR_DIAGNOSTICS] requestId=a1 originalRequestId=run-1 decision=RETRY (countAsTransportError=1)",
+    );
+    console.warn(
+      "[AGENT_ERROR_DIAGNOSTICS] requestId=a2 originalRequestId=run-1 decision=RETRY (countAsTransportError=1)",
+    );
     assert.equal(probe.isRetrying(), true);
-    console.log("[nal_agent_retries] Request successful");
+    console.log("[nal_agent_retries] Request successful originalRequestId=run-1");
+    assert.equal(probe.isRetrying(), false);
+  } finally {
+    stop();
+  }
+});
+
+test("RETRY that ends in THROW does not leave the probe stuck", () => {
+  const probe = createSdkReconnectProbe();
+  const stop = probe.install();
+  try {
+    console.warn(
+      "[AGENT_ERROR_DIAGNOSTICS] requestId=a1 originalRequestId=run-1 decision=RETRY (countAsTransportError=1)",
+    );
+    console.warn(
+      "[AGENT_ERROR_DIAGNOSTICS] requestId=a2 originalRequestId=run-1 decision=THROW stall",
+    );
+    assert.equal(probe.isRetrying(), false);
+  } finally {
+    stop();
+  }
+});
+
+test("overlapping reconnects on different originalRequestIds stay independent", () => {
+  const probe = createSdkReconnectProbe();
+  const stop = probe.install();
+  try {
+    console.warn(
+      "[AGENT_ERROR_DIAGNOSTICS] requestId=a originalRequestId=run-a decision=RETRY (countAsServerError=1)",
+    );
+    console.warn(
+      "[AGENT_ERROR_DIAGNOSTICS] requestId=b originalRequestId=run-b decision=RETRY (countAsTransportError=1)",
+    );
     assert.equal(probe.isRetrying(), true);
-    console.log("[nal_agent_retries] Request successful");
+    console.log("[nal_agent_retries] Request successful originalRequestId=run-a");
+    assert.equal(probe.isRetrying(), true);
+    console.log("[nal_agent_retries] Request successful originalRequestId=run-b");
     assert.equal(probe.isRetrying(), false);
   } finally {
     stop();
