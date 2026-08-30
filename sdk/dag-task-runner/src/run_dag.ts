@@ -31,6 +31,7 @@ import { join } from "node:path";
 import process from "node:process";
 
 import { isTimeoutError, TimeoutError, withIdleTimeout } from "./idle_timeout.js";
+import { createSdkReconnectProbe } from "./sdk_reconnect.js";
 import { parseDAG, computeRanks, createModelResolver, validateModelMap } from "./dag.js";
 import type { ModelMapOverride, RawTask } from "./dag.js";
 import {
@@ -248,6 +249,8 @@ async function main(): Promise<void> {
   process.on("SIGTERM", onSignal);
   process.on("SIGHUP", onSignal);
 
+  const reconnect = createSdkReconnectProbe();
+  const stopReconnectProbe = reconnect.install();
   try {
     for (let rankIdx = 0; rankIdx < ranks.length; rankIdx++) {
       const rank = ranks[rankIdx];
@@ -274,6 +277,7 @@ async function main(): Promise<void> {
               taskTimeoutMs: args.taskTimeoutMs,
               streamPublishMs: args.streamPublishMs,
               streamIdleTimeoutMs: args.streamIdleTimeoutMs,
+              isRetrying: () => reconnect.isRetrying(),
             },
           );
         }),
@@ -305,6 +309,7 @@ async function main(): Promise<void> {
     finalized = true;
     throw err;
   } finally {
+    stopReconnectProbe();
     process.off("unhandledRejection", onUnhandledRejection);
     process.off("uncaughtException", onUncaughtException);
     process.off("SIGINT", onSignal);
@@ -338,18 +343,10 @@ async function runTask(
     ? `${upstreamContext}\n\n---\n\n${task.subtask_prompt}`
     : task.subtask_prompt;
 
-  let reconnecting = false;
-  const local = {
-    cwd,
-    enableAgentRetries: true as const,
-    onConnectionStateChange: (event: { state: string }) => {
-      reconnecting = event.state === "reconnecting";
-    },
-  };
   const agent = await Agent.create({
     apiKey: process.env.CURSOR_API_KEY!,
     model: { id: ts.model },
-    local,
+    local: { cwd, enableAgentRetries: true },
   });
 
   let run: RunnerTaskRun | undefined;
@@ -377,7 +374,7 @@ async function runTask(
       const next = await withIdleTimeout(iterator.next(), {
         idleMs: timeoutForNext,
         deadline,
-        isRetrying: () => reconnecting,
+        isRetrying: options.isRetrying,
         idleMessage: streamWaitTimeoutMessage({
           taskId: task.id,
           timeoutMs: timeoutForNext,
@@ -482,6 +479,7 @@ interface RunTaskOptions {
   taskTimeoutMs: number;
   streamPublishMs: number;
   streamIdleTimeoutMs: number;
+  isRetrying: () => boolean;
 }
 
 /** Cap on per-task `resultText` size — applies to live streaming and final state. */
