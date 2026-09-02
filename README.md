@@ -54,3 +54,8 @@ Learn more in the [Cursor SDK TypeScript docs](https://cursor.com/docs/sdk/types
 
 An educational Python coding-agent loop that uses an xAI Console API key,
 defaults to `grok-4.6`, and provides workspace-scoped file and shell tools.
+
+### [Grok Voice Patient Intake](voice-agents/grok-patient-intake)
+
+A LiveKit voice agent that uses xAI's native realtime speech-to-speech model
+for a fictional family-medicine intake and appointment workflow.
