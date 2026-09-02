@@ -8,7 +8,7 @@ messages, update insurance, collect pre-visit answers, and escalate possible
 emergencies.
 
 This example reimplements the workflow of LiveKit's
-[xAI patient-intake demo](https://github.com/livekit-examples/python-agents-examples/tree/main/complex-agents/xai-patient-intake),
+[xAI patient-intake demo](https://github.com/livekit-examples/python-agents-examples/tree/ab7ab31150ea562e4bb8416da1e3df4f6e0e7e8b/complex-agents/xai-patient-intake),
 but replaces its separately configured speech-to-text, language, and
 text-to-speech models with one native speech-to-speech connection:
 
@@ -19,6 +19,7 @@ AgentSession(
         voice="Ara",
     ),
     vad=None,
+    turn_handling=TurnHandlingOptions(turn_detection="realtime_llm"),
 )
 ```
 
@@ -122,7 +123,12 @@ The defaults follow the current xAI realtime recommendation:
 | `XAI_VOICE` | `Ara` | Warm, friendly built-in voice |
 
 The LiveKit xAI plugin supplies server-side voice activity detection and turn
-handling. See the
+handling; `realtime_llm` makes that ownership explicit. Its current default
+ends a turn after 200 ms of silence, so production intake agents should test
+and tune the realtime model's `turn_detection` settings for callers who pause
+while recalling dates, medications, or symptoms. `grok-voice-latest` is a
+floating alias; pin a versioned voice model when release-to-release stability
+is more important than automatically receiving the newest model. See the
 [LiveKit xAI realtime guide](https://docs.livekit.io/agents/models/realtime/plugins/xai/)
 for supported voices and lower-level options.
 

@@ -44,10 +44,19 @@ def test_session_uses_one_realtime_model_without_cascade_components() -> None:
     assert len(session_calls) == 1
     keywords = {keyword.arg for keyword in session_calls[0].keywords}
     assert "llm" in keywords
-    assert keywords.isdisjoint({"stt", "tts", "turn_detection"})
+    assert keywords.isdisjoint({"stt", "tts"})
     vad_keyword = next(keyword for keyword in session_calls[0].keywords if keyword.arg == "vad")
     assert isinstance(vad_keyword.value, ast.Constant)
     assert vad_keyword.value.value is None
+    turn_handling = next(
+        keyword for keyword in session_calls[0].keywords if keyword.arg == "turn_handling"
+    )
+    assert isinstance(turn_handling.value, ast.Call)
+    realtime_turn_detection = next(
+        keyword for keyword in turn_handling.value.keywords if keyword.arg == "turn_detection"
+    )
+    assert isinstance(realtime_turn_detection.value, ast.Constant)
+    assert realtime_turn_detection.value.value == "realtime_llm"
 
 
 def test_realtime_model_defaults_and_environment_overrides(monkeypatch) -> None:

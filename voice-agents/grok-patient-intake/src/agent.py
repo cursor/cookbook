@@ -14,6 +14,7 @@ from livekit.agents import (
     AgentSession,
     JobContext,
     ToolError,
+    TurnHandlingOptions,
     cli,
     function_tool,
 )
@@ -417,6 +418,7 @@ def create_session(clinic: Clinic) -> AgentSession[CallState]:
         userdata=CallState(clinic=clinic),
         llm=create_realtime_model(),
         vad=None,
+        turn_handling=TurnHandlingOptions(turn_detection="realtime_llm"),
         max_tool_steps=8,
     )
 
