@@ -8,8 +8,9 @@ import json
 import os
 import subprocess
 import sys
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Callable, Mapping, Sequence
+from typing import Any
 
 DEFAULT_MODEL = "grok-4.6"
 DEFAULT_MAX_TOOL_ROUNDS = 24
@@ -125,9 +126,7 @@ class Workspace:
         replacements = matches if replace_all else 1
         updated = content.replace(old_text, new_text, replacements)
         if len(updated) > MAX_FILE_CHARS:
-            raise WorkspaceError(
-                f"Edited file would exceed the {MAX_FILE_CHARS}-character limit."
-            )
+            raise WorkspaceError(f"Edited file would exceed the {MAX_FILE_CHARS}-character limit.")
         target.write_text(updated, encoding="utf-8")
         return {
             "path": self._display_path(target),
@@ -238,9 +237,7 @@ class Workspace:
             elif name == "shell":
                 result = self.run_shell(
                     command=_argument_string(arguments, "command"),
-                    timeout_seconds=_argument_int(
-                        arguments, "timeout_seconds", default=30
-                    ),
+                    timeout_seconds=_argument_int(arguments, "timeout_seconds", default=30),
                 )
             else:
                 raise WorkspaceError(f"Unknown tool: {name}")
@@ -401,9 +398,7 @@ def build_system_prompt(workspace: Path | str) -> str:
     )
 
 
-def resolve_model(
-    cli_model: str | None, environment: Mapping[str, str] | None = None
-) -> str:
+def resolve_model(cli_model: str | None, environment: Mapping[str, str] | None = None) -> str:
     """Resolve model precedence: CLI, XAI_MODEL, then the cookbook default."""
     environment = os.environ if environment is None else environment
     return cli_model or environment.get("XAI_MODEL") or DEFAULT_MODEL
@@ -431,9 +426,7 @@ class CodingAgent:
             ) from error
 
         self.workspace = workspace
-        self.max_tool_rounds = _bounded_int(
-            "max_tool_rounds", max_tool_rounds, minimum=1
-        )
+        self.max_tool_rounds = _bounded_int("max_tool_rounds", max_tool_rounds, minimum=1)
         self.on_tool_call = on_tool_call
         self._user_message = user
         self._tool_result = tool_result
@@ -476,19 +469,13 @@ class CodingAgent:
                     self.on_tool_call(function.name, arguments)
 
                 if parse_error is not None:
-                    result = json.dumps(
-                        {"ok": False, "error": parse_error}, ensure_ascii=False
-                    )
+                    result = json.dumps({"ok": False, "error": parse_error}, ensure_ascii=False)
                 else:
                     result = self.workspace.execute(function.name, arguments)
 
-                self._chat.append(
-                    self._tool_result(result, tool_call_id=tool_call.id or None)
-                )
+                self._chat.append(self._tool_result(result, tool_call_id=tool_call.id or None))
 
-        raise RuntimeError(
-            f"Grok exceeded the {self.max_tool_rounds}-round tool-call limit."
-        )
+        raise RuntimeError(f"Grok exceeded the {self.max_tool_rounds}-round tool-call limit.")
 
 
 def _parse_tool_arguments(raw_arguments: str) -> tuple[dict[str, Any], str | None]:
@@ -510,9 +497,7 @@ def _log_tool_call(name: str, arguments: Mapping[str, Any]) -> None:
         "shell": ("command", "timeout_seconds"),
     }.get(name, ())
     details = ", ".join(
-        f"{key}={_summarize_value(arguments[key])}"
-        for key in visible_keys
-        if key in arguments
+        f"{key}={_summarize_value(arguments[key])}" for key in visible_keys if key in arguments
     )
     suffix = f"({details})" if details else "()"
     print(f"[tool] {name}{suffix}", file=sys.stderr, flush=True)
@@ -569,18 +554,14 @@ def _argument_string(
     return _required_string(name, arguments[name], allow_empty=allow_empty)
 
 
-def _argument_int(
-    arguments: Mapping[str, Any], name: str, *, default: int
-) -> int:
+def _argument_int(arguments: Mapping[str, Any], name: str, *, default: int) -> int:
     value = arguments.get(name, default)
     if isinstance(value, bool) or not isinstance(value, int):
         raise WorkspaceError(f"{name} must be an integer.")
     return value
 
 
-def _argument_bool(
-    arguments: Mapping[str, Any], name: str, *, default: bool
-) -> bool:
+def _argument_bool(arguments: Mapping[str, Any], name: str, *, default: bool) -> bool:
     return _required_bool(name, arguments.get(name, default))
 
 
@@ -605,10 +586,7 @@ def _coerce_subprocess_output(value: str | bytes | None) -> str:
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Run a small xAI-powered coding agent in a local workspace.",
-        epilog=(
-            'Example: xai-code-agent --cwd ../.. '
-            '"Explain how this project is structured"'
-        ),
+        epilog=('Example: xai-code-agent --cwd ../.. "Explain how this project is structured"'),
     )
     parser.add_argument(
         "prompt",

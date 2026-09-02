@@ -44,9 +44,7 @@ class WorkspaceTest(unittest.TestCase):
                 self.workspace.read_file("escape/secret.txt")
 
     def test_write_read_and_exact_edit(self) -> None:
-        write_result = self.workspace.write_file(
-            "src/example.py", "value = 1\nvalue = 1\n"
-        )
+        write_result = self.workspace.write_file("src/example.py", "value = 1\nvalue = 1\n")
         self.assertEqual(write_result["path"], "src/example.py")
 
         with self.assertRaisesRegex(WorkspaceError, "appears 2 times"):
@@ -64,29 +62,23 @@ class WorkspaceTest(unittest.TestCase):
         self.workspace.write_file("tests/test_agent.py", "")
 
         result = self.workspace.list_files("**/*.py")
-        self.assertEqual(
-            result["matches"], ["src/agent.py", "tests/test_agent.py"]
-        )
+        self.assertEqual(result["matches"], ["src/agent.py", "tests/test_agent.py"])
         with self.assertRaisesRegex(WorkspaceError, "relative to the workspace"):
             self.workspace.list_files("../**/*")
 
     def test_shell_starts_in_workspace_and_hides_xai_key(self) -> None:
         command = (
-            "python3 -c \"import os; print(os.getcwd()); "
+            'python3 -c "import os; print(os.getcwd()); '
             "print(os.getenv('XAI_API_KEY', 'missing'))\""
         )
         with mock.patch.dict(os.environ, {"XAI_API_KEY": "do-not-leak"}):
             result = self.workspace.run_shell(command)
 
         self.assertEqual(result["exit_code"], 0)
-        self.assertEqual(
-            result["stdout"].splitlines(), [str(self.root.resolve()), "missing"]
-        )
+        self.assertEqual(result["stdout"].splitlines(), [str(self.root.resolve()), "missing"])
 
     def test_dispatch_returns_errors_to_the_model(self) -> None:
-        result = json.loads(
-            self.workspace.execute("read_file", {"path": "../outside.txt"})
-        )
+        result = json.loads(self.workspace.execute("read_file", {"path": "../outside.txt"}))
         self.assertFalse(result["ok"])
         self.assertIn("relative to the workspace", result["error"])
 
