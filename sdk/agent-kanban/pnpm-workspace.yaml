@@ -1,2 +1,9 @@
 packages:
   - "."
+
+onlyBuiltDependencies:
+  - esbuild
+  - msw
+  - sharp
+  - sqlite3
+  - unrs-resolver
