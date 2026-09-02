@@ -47,3 +47,10 @@ Decompose a task into a JSON DAG, fan it out across local subagents, and stream 
 A miniature Cursor SDK in Perl on the open [`sdk.v1` bridge](https://github.com/cursor/sdk-bridge). Shows how to spawn `cursor-sdk-bridge`, speak Connect JSON, and run one local agent turn without a first-party SDK.
 
 Learn more in the [Cursor SDK TypeScript docs](https://cursor.com/docs/sdk/typescript) and the [SDK Bridge docs](https://cursor.com/docs/sdk/bridge).
+
+## xAI API
+
+### [xAI Coding Agent CLI](sdk/xai-coding-agent-cli)
+
+An educational Python coding-agent loop that uses an xAI Console API key,
+defaults to `grok-4.6`, and provides workspace-scoped file and shell tools.
