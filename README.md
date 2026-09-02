@@ -50,7 +50,7 @@ Learn more in the [Cursor SDK TypeScript docs](https://cursor.com/docs/sdk/types
 
 ## xAI API
 
-### [xAI Coding Agent CLI](sdk/xai-coding-agent-cli)
+### [Grok Coding Agent CLI](sdk/grok-coding-agent-cli)
 
 An educational Python coding-agent loop that uses an xAI Console API key,
 defaults to `grok-4.6`, and provides workspace-scoped file and shell tools.

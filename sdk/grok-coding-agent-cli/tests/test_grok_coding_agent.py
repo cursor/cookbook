@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from xai_coding_agent import (
+from grok_coding_agent import (
     DEFAULT_MODEL,
     Workspace,
     WorkspaceError,

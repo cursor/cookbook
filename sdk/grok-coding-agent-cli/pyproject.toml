@@ -3,17 +3,17 @@ requires = ["setuptools>=80"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "xai-coding-agent-cli"
+name = "grok-coding-agent-cli"
 version = "0.1.0"
-description = "A small coding-agent CLI powered by the xAI API"
+description = "A small Grok coding-agent CLI powered by the xAI API"
 requires-python = ">=3.10"
 dependencies = ["xai-sdk==1.19.0"]
 
 [project.scripts]
-xai-code-agent = "xai_coding_agent:main"
+grok-code-agent = "grok_coding_agent:main"
 
 [tool.setuptools]
-py-modules = ["xai_coding_agent"]
+py-modules = ["grok_coding_agent"]
 
 [tool.ruff]
 line-length = 100
