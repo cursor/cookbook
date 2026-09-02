@@ -216,7 +216,9 @@ class PatientIntakeAgent(Agent):
                     "No established patient matched those details. Check them before booking."
                 ) from None
             if (last_name.strip().casefold(), born) not in self._new_patient_searches:
-                raise ToolError("Call find_open_times with these patient details before booking.")
+                raise ToolError(
+                    "Call find_open_times with these patient details before booking."
+                ) from None
             try:
                 patient = self.clinic.register_patient(
                     first_name=first_name,

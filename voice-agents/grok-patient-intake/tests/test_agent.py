@@ -81,9 +81,7 @@ async def test_new_patient_search_and_booking_use_the_same_identity() -> None:
         date_of_birth="1990-01-01",
     )
     slot_id = next(
-        line.split(":", 1)[0]
-        for line in openings.splitlines()
-        if line.startswith("SL-")
+        line.split(":", 1)[0] for line in openings.splitlines() if line.startswith("SL-")
     )
     result = await intake_agent.book_appointment(
         patient_status="new",

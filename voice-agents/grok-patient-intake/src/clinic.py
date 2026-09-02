@@ -328,9 +328,7 @@ class Clinic:
         except KeyError as error:
             raise ClinicError("That appointment time is no longer available.") from error
 
-    def _patient_appointment(
-        self, patient: Patient, appointment_id: str
-    ) -> Appointment:
+    def _patient_appointment(self, patient: Patient, appointment_id: str) -> Appointment:
         try:
             appointment = self.appointments[appointment_id]
         except KeyError as error:
@@ -341,9 +339,7 @@ class Clinic:
             raise ClinicError("That appointment is no longer scheduled.")
         return appointment
 
-    def _provider_can_see(
-        self, provider: Provider, patient: Patient, slot: Slot
-    ) -> bool:
+    def _provider_can_see(self, provider: Provider, patient: Patient, slot: Slot) -> bool:
         return provider.accepts(patient, slot.start) and (
             not patient.registered_during_call or provider.accepting_new_patients
         )
@@ -418,9 +414,7 @@ def create_demo_clinic(now: datetime) -> Clinic:
         _next_record_number=100,
     )
     existing_slot = next(
-        slot
-        for slot in clinic.open_slot_records.values()
-        if slot.provider_id == "rivera"
+        slot for slot in clinic.open_slot_records.values() if slot.provider_id == "rivera"
     )
     clinic.book(
         patient=patients[0],
