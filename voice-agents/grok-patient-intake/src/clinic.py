@@ -206,6 +206,45 @@ class Clinic:
         self.appointments[appointment.id] = appointment
         return appointment
 
+    def register_and_book(
+        self,
+        *,
+        first_name: str,
+        last_name: str,
+        date_of_birth: date,
+        phone: str,
+        slot_id: str,
+        visit_type: VisitType,
+        reason: str,
+    ) -> tuple[Patient, Appointment]:
+        """Validate a new patient's booking before creating either record."""
+        if not first_name.strip() or not last_name.strip() or not phone.strip():
+            raise ClinicError("A new patient needs a first name, last name, and phone number.")
+        slot = self._available_slot(slot_id)
+        prospective_patient = Patient(
+            chart_id="pending",
+            first_name=first_name.strip(),
+            last_name=last_name.strip(),
+            date_of_birth=date_of_birth,
+            phone=phone.strip(),
+            registered_during_call=True,
+        )
+        self._ensure_eligible(prospective_patient, slot)
+
+        patient = self.register_patient(
+            first_name=first_name,
+            last_name=last_name,
+            date_of_birth=date_of_birth,
+            phone=phone,
+        )
+        appointment = self.book(
+            patient=patient,
+            slot_id=slot_id,
+            visit_type=visit_type,
+            reason=reason,
+        )
+        return patient, appointment
+
     def scheduled_appointments(self, patient: Patient) -> list[Appointment]:
         return sorted(
             (
@@ -401,7 +440,10 @@ def create_demo_clinic(now: datetime) -> Clinic:
         ),
     ]
     slots = [
-        Slot(provider_id=provider.id, start=datetime.combine(day, appointment_time))
+        Slot(
+            provider_id=provider.id,
+            start=datetime.combine(day, appointment_time, tzinfo=now.tzinfo),
+        )
         for day in _next_weekdays(now, 5)
         for provider in providers.values()
         for appointment_time in (time(9, 30), time(14, 0))

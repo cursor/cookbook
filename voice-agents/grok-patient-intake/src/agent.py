@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from datetime import date, datetime
+from typing import Literal
 
 from dotenv import load_dotenv
 from livekit.agents import (
@@ -31,6 +32,8 @@ from clinic import (
 AGENT_NAME = "grok-patient-intake"
 DEFAULT_VOICE_MODEL = "grok-voice-latest"
 DEFAULT_VOICE = "Ara"
+PatientStatus = Literal["new", "established"]
+CallerRelationship = Literal["patient", "parent_or_guardian", "other"]
 
 PRACTICE_INFORMATION = """
 Maplewood Family Medicine is a fictional teaching clinic at 100 Demo Avenue.
@@ -54,6 +57,7 @@ Voice style:
 
 Workflow:
 - Retain facts the caller has already supplied and never invent missing values.
+- Remind callers this is a fake-data demo if they try to share real information.
 - Use a tool for every clinic fact lookup or state change.
 - Never claim that an appointment, message, insurance update, or intake was saved
   unless the corresponding tool succeeded.
@@ -63,6 +67,8 @@ Workflow:
   appointment IDs private, and pass the chosen IDs only to tools.
 - Collect pre-visit answers one at a time. Do not diagnose or reinterpret them.
 - Do not give medical advice, approve refills, interpret results, or quote prices.
+- Do not reveal appointment details to an unrelated caller. A parent or guardian
+  may access only a child patient's appointment information in this demo.
 
 Safety:
 - If the caller describes a possible emergency, call record_emergency_escalation
@@ -74,9 +80,9 @@ Safety:
   appointment or nurse message, not an emergency.
 """.strip()
 
-GREETING_INSTRUCTIONS = (
-    "In one short sentence, identify yourself as Maplewood Family Medicine's "
-    "automated assistant and ask how you can help."
+GREETING_TEXT = (
+    "Hello, I'm Maplewood Family Medicine's automated demo assistant. "
+    "Please use only fake information here. How can I help?"
 )
 
 
@@ -101,14 +107,19 @@ class PatientIntakeAgent(Agent):
     """One conversational agent with a fixed, auditable clinic tool surface."""
 
     def __init__(self, clinic: Clinic, *, greet: bool = True) -> None:
-        super().__init__(instructions=BASE_INSTRUCTIONS)
+        timezone_name = clinic.now.tzname() or "local time"
+        current_time = (
+            f"The clinic's current date and time is "
+            f"{clinic.now:%A, %B %d, %Y at %I:%M %p} {timezone_name}."
+        )
+        super().__init__(instructions=f"{current_time}\n\n{BASE_INSTRUCTIONS}")
         self.clinic = clinic
         self.greet = greet
         self._new_patient_searches: set[tuple[str, date]] = set()
 
     async def on_enter(self) -> None:
         if self.greet:
-            self.session.generate_reply(instructions=GREETING_INSTRUCTIONS)
+            self.session.say(GREETING_TEXT)
 
     def _patient(self, last_name: str, date_of_birth: str) -> Patient:
         try:
@@ -130,7 +141,7 @@ class PatientIntakeAgent(Agent):
     @function_tool
     async def find_open_times(
         self,
-        patient_status: str,
+        patient_status: PatientStatus,
         last_name: str,
         date_of_birth: str,
         provider_id: str = "",
@@ -186,14 +197,14 @@ class PatientIntakeAgent(Agent):
     @function_tool
     async def book_appointment(
         self,
-        patient_status: str,
-        first_name: str,
+        patient_status: PatientStatus,
         last_name: str,
         date_of_birth: str,
-        phone: str,
         slot_id: str,
         visit_type: VisitType,
         reason: str,
+        first_name: str = "",
+        phone: str = "",
     ) -> str:
         """Book a time returned by find_open_times.
 
@@ -207,6 +218,8 @@ class PatientIntakeAgent(Agent):
             visit_type: new_problem, annual_physical, well_child, follow_up, or telehealth.
             reason: Brief caller-described reason without diagnosis.
         """
+        if patient_status not in {"new", "established"}:
+            raise ToolError("patient_status must be new or established.")
         born = _parse_date(date_of_birth, "date_of_birth")
         try:
             patient = self.clinic.find_patient(last_name, born)
@@ -220,24 +233,27 @@ class PatientIntakeAgent(Agent):
                     "Call find_open_times with these patient details before booking."
                 ) from None
             try:
-                patient = self.clinic.register_patient(
+                patient, appointment = self.clinic.register_and_book(
                     first_name=first_name,
                     last_name=last_name,
                     date_of_birth=born,
                     phone=phone,
+                    slot_id=slot_id,
+                    visit_type=visit_type,
+                    reason=reason,
                 )
             except ClinicError as error:
                 raise ToolError(str(error)) from error
-
-        try:
-            appointment = self.clinic.book(
-                patient=patient,
-                slot_id=slot_id,
-                visit_type=visit_type,
-                reason=reason,
-            )
-        except ClinicError as error:
-            raise ToolError(str(error)) from error
+        else:
+            try:
+                appointment = self.clinic.book(
+                    patient=patient,
+                    slot_id=slot_id,
+                    visit_type=visit_type,
+                    reason=reason,
+                )
+            except ClinicError as error:
+                raise ToolError(str(error)) from error
         provider = self.clinic.providers[appointment.provider_id]
         return f"Booked {_format_time(appointment.start)} with {provider.name}."
 
@@ -247,6 +263,7 @@ class PatientIntakeAgent(Agent):
         action: AppointmentAction,
         last_name: str,
         date_of_birth: str,
+        caller_relationship: CallerRelationship,
         appointment_id: str = "",
         new_slot_id: str = "",
     ) -> str:
@@ -256,10 +273,19 @@ class PatientIntakeAgent(Agent):
             action: list, cancel, or reschedule.
             last_name: Patient's surname.
             date_of_birth: Full date of birth in YYYY-MM-DD format.
+            caller_relationship: patient, parent_or_guardian, or other.
             appointment_id: Private appointment ID for cancel or reschedule.
             new_slot_id: Private slot ID from find_open_times for reschedule.
         """
         patient = self._patient(last_name, date_of_birth)
+        if caller_relationship == "other" or (
+            caller_relationship == "parent_or_guardian"
+            and patient.age_on(self.clinic.now.date()) >= 18
+        ):
+            return (
+                "Do not confirm whether an appointment exists. "
+                "The patient must contact the office directly."
+            )
         if action == "list":
             appointments = self.clinic.scheduled_appointments(patient)
             if not appointments:
@@ -390,6 +416,7 @@ def create_session(clinic: Clinic) -> AgentSession[CallState]:
     return AgentSession[CallState](
         userdata=CallState(clinic=clinic),
         llm=create_realtime_model(),
+        vad=None,
         max_tool_steps=8,
     )
 
@@ -399,7 +426,7 @@ server = AgentServer()
 
 @server.rtc_session(agent_name=AGENT_NAME)
 async def patient_intake(ctx: JobContext) -> None:
-    clinic = create_demo_clinic(datetime.now())
+    clinic = create_demo_clinic(datetime.now().astimezone())
     session = create_session(clinic)
     await session.start(
         agent=PatientIntakeAgent(clinic),

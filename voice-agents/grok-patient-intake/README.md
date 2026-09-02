@@ -18,6 +18,7 @@ AgentSession(
         model="grok-voice-latest",
         voice="Ara",
     ),
+    vad=None,
 )
 ```
 
@@ -27,7 +28,8 @@ STT → LLM → TTS cascade, VAD plugin, or turn detector in this example.
 
 > The clinic and every patient are fake, in-memory teaching data. This is not a
 > medical device, a source of medical advice, a production scheduling system,
-> or a HIPAA-ready application. Never enter real patient information.
+> or a HIPAA-ready application. Never enter real patient information. The
+> agent repeats this fake-data warning at the start of each call.
 
 ## Getting Started
 
@@ -53,6 +55,11 @@ Fill in:
 - `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET` from a
   [LiveKit Cloud project](https://cloud.livekit.io/).
 - `XAI_API_KEY` from the [xAI Console](https://console.x.ai/).
+
+LiveKit transports the call and xAI processes its audio, transcript, prompt,
+and tool context. This worker does not start a recording, but recording can be
+enabled elsewhere in a LiveKit deployment. Review both providers' current data
+handling and retention settings before adapting the example.
 
 Talk to the agent directly from the terminal:
 
@@ -138,4 +145,5 @@ deduplication, intake storage, insurance updates, and emergency recording.
 A real deployment needs authenticated patient access, consent and disclosure,
 encrypted durable storage, EHR integration, audit logging, retention controls,
 human escalation, regional emergency behavior, monitoring, and clinical/legal
-review. Prompts alone do not provide those guarantees.
+review. It must also prevent room recording unless recording is explicitly
+authorized and governed. Prompts alone do not provide those guarantees.

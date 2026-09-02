@@ -6,6 +6,7 @@ import agent as agent_module
 from agent import (
     DEFAULT_VOICE,
     DEFAULT_VOICE_MODEL,
+    GREETING_TEXT,
     PatientIntakeAgent,
     create_realtime_model,
 )
@@ -43,7 +44,10 @@ def test_session_uses_one_realtime_model_without_cascade_components() -> None:
     assert len(session_calls) == 1
     keywords = {keyword.arg for keyword in session_calls[0].keywords}
     assert "llm" in keywords
-    assert keywords.isdisjoint({"stt", "tts", "vad", "turn_detection"})
+    assert keywords.isdisjoint({"stt", "tts", "turn_detection"})
+    vad_keyword = next(keyword for keyword in session_calls[0].keywords if keyword.arg == "vad")
+    assert isinstance(vad_keyword.value, ast.Constant)
+    assert vad_keyword.value.value is None
 
 
 def test_realtime_model_defaults_and_environment_overrides(monkeypatch) -> None:
@@ -69,6 +73,13 @@ def test_realtime_model_defaults_and_environment_overrides(monkeypatch) -> None:
         "voice": "Eve",
     }
     assert len(calls) == 2
+
+
+def test_agent_instructions_include_call_time_and_fake_data_disclosure() -> None:
+    intake_agent = PatientIntakeAgent(create_demo_clinic(NOW), greet=False)
+
+    assert "Wednesday, September 02, 2026 at 09:00 AM" in intake_agent.instructions
+    assert "fake information" in GREETING_TEXT
 
 
 async def test_new_patient_search_and_booking_use_the_same_identity() -> None:
@@ -98,6 +109,20 @@ async def test_new_patient_search_and_booking_use_the_same_identity() -> None:
     assert patient.registered_during_call
     assert clinic.scheduled_appointments(patient)
     assert result.startswith("Booked ")
+
+
+async def test_unrelated_caller_cannot_access_appointment_details() -> None:
+    intake_agent = PatientIntakeAgent(create_demo_clinic(NOW), greet=False)
+
+    result = await intake_agent.manage_appointment(
+        action="list",
+        last_name="Example",
+        date_of_birth="1987-04-12",
+        caller_relationship="other",
+    )
+
+    assert "Do not confirm whether an appointment exists" in result
+    assert "APT-" not in result
 
 
 async def test_intake_and_emergency_tools_write_durable_call_state() -> None:

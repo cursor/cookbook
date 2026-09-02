@@ -59,6 +59,24 @@ def test_new_adult_patient_cannot_book_with_closed_or_pediatric_provider() -> No
         )
 
 
+def test_failed_new_patient_booking_does_not_leave_a_chart() -> None:
+    clinic = create_demo_clinic(NOW)
+    patient_count = len(clinic.patients)
+
+    with pytest.raises(ClinicError, match="no longer available"):
+        clinic.register_and_book(
+            first_name="Taylor",
+            last_name="Demo",
+            date_of_birth=date(1990, 1, 1),
+            phone="555-0199",
+            slot_id="SL-NOT-REAL",
+            visit_type="new_problem",
+            reason="demo concern",
+        )
+
+    assert len(clinic.patients) == patient_count
+
+
 def test_messages_are_deduplicated_by_patient_and_kind() -> None:
     clinic = create_demo_clinic(NOW)
     patient = clinic.find_patient("Example", date(1987, 4, 12))
