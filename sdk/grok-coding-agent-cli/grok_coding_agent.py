@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""A small, educational coding-agent loop powered by the xAI API."""
+"""A small, educational Grok coding-agent loop powered by the xAI API."""
 
 from __future__ import annotations
 
@@ -405,7 +405,7 @@ def resolve_model(cli_model: str | None, environment: Mapping[str, str] | None =
 
 
 class CodingAgent:
-    """Stateful xAI chat plus a local client-side tool loop."""
+    """Stateful Grok chat plus a local client-side tool loop."""
 
     def __init__(
         self,
@@ -585,8 +585,8 @@ def _coerce_subprocess_output(value: str | bytes | None) -> str:
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run a small xAI-powered coding agent in a local workspace.",
-        epilog=('Example: xai-code-agent --cwd ../.. "Explain how this project is structured"'),
+        description="Run a small Grok-powered coding agent in a local workspace.",
+        epilog=('Example: grok-code-agent --cwd ../.. "Explain how this project is structured"'),
     )
     parser.add_argument(
         "prompt",
@@ -600,13 +600,13 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--model",
-        help=f"xAI model override (default: XAI_MODEL or {DEFAULT_MODEL}).",
+        help=f"Grok model override (default: XAI_MODEL or {DEFAULT_MODEL}).",
     )
     return parser
 
 
 def _run_repl(agent: CodingAgent, *, model: str, workspace: Workspace) -> int:
-    print(f"xAI coding agent | model: {model} | workspace: {workspace.root}")
+    print(f"Grok coding agent | model: {model} | workspace: {workspace.root}")
     print("Type /help for commands.")
 
     while True:

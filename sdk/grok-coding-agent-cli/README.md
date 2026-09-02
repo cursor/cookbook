@@ -1,4 +1,4 @@
-# xAI Coding Agent CLI
+# Grok Coding Agent CLI
 
 A small teaching CLI that rebuilds the core coding-agent loop on the official
 [xAI Python SDK](https://github.com/xai-org/xai-sdk-python). It sends prompts to
@@ -16,7 +16,7 @@ Use Python 3.10 or newer.
 Create a virtual environment and install the example:
 
 ```bash
-cd sdk/xai-coding-agent-cli
+cd sdk/grok-coding-agent-cli
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
@@ -32,13 +32,13 @@ export XAI_API_KEY="xai-..."
 Ask for a one-shot task against the cookbook repository:
 
 ```bash
-xai-code-agent --cwd ../.. "Explain how this project is structured"
+grok-code-agent --cwd ../.. "Explain how this project is structured"
 ```
 
 Start the interactive REPL by omitting the prompt:
 
 ```bash
-xai-code-agent --cwd ../..
+grok-code-agent --cwd ../..
 ```
 
 Type `/help` for the two REPL commands, or `/exit` to quit.
@@ -48,7 +48,7 @@ Type `/help` for the two REPL commands, or `/exit` to quit.
 The default model is `grok-4.6`. Override it for future models with `--model`:
 
 ```bash
-xai-code-agent --model future-model "Summarize this directory"
+grok-code-agent --model future-model "Summarize this directory"
 ```
 
 You can also set `XAI_MODEL`. The precedence is `--model`, then `XAI_MODEL`,
@@ -88,5 +88,5 @@ xAI API or consume credits:
 python -m unittest discover -s tests -v
 ```
 
-For a complete xAI coding product with a full TUI and headless mode, see the
+For a complete Grok coding product with a full TUI and headless mode, see the
 [Grok Build documentation](https://docs.x.ai/build/overview).
