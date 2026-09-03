@@ -66,8 +66,29 @@ const AGENT_INSTRUCTIONS = [
   "Keep progress updates concise and summarize the result clearly.",
 ].join("\n")
 
+export async function settledAgent<T>(
+  current: T | Promise<T>,
+  recreate: () => T | Promise<T>
+): Promise<T> {
+  try {
+    return await current
+  } catch {
+    return await recreate()
+  }
+}
+
+export async function disposeCreatedAgent(
+  agent: SDKAgent | Promise<SDKAgent>
+): Promise<void> {
+  try {
+    await (await agent)[Symbol.asyncDispose]()
+  } catch {
+    // Failed creates have nothing to dispose.
+  }
+}
+
 export class CodingAgentSession {
-  private agent: SDKAgent
+  private agent: SDKAgent | Promise<SDKAgent>
   private agentKey: string
   private cloudRepository: CloudRepository | null = null
   private currentRun: Run | null = null
@@ -141,7 +162,7 @@ export class CodingAgentSession {
   }
 
   async dispose() {
-    await this.agent[Symbol.asyncDispose]()
+    await disposeCreatedAgent(this.agent)
   }
 
   async cancelCurrentRun(): Promise<CancelRunResult> {
@@ -165,7 +186,7 @@ export class CodingAgentSession {
   async sendPrompt({ prompt, onEvent }: SendPromptOptions) {
     await this.ensureAgentFresh()
 
-    const run = await this.agent.send(buildPrompt(prompt), {
+    const run = await (await this.resolvedAgent()).send(buildPrompt(prompt), {
       ...(this.mode === "local" ? { model: this.modelSelection } : {}),
       ...(this.mode === "local" && this.force ? { local: { force: true } } : {}),
     })
@@ -221,6 +242,13 @@ export class CodingAgentSession {
     })
   }
 
+  private async resolvedAgent() {
+    const agent = await settledAgent(this.agent, () => this.createAgent())
+    this.agent = agent
+    this.agentKey = this.currentAgentKey()
+    return agent
+  }
+
   private async ensureAgentFresh() {
     if (this.agentKey !== this.currentAgentKey()) {
       await this.replaceAgent()
@@ -229,9 +257,9 @@ export class CodingAgentSession {
 
   private async replaceAgent() {
     const previousAgent = this.agent
-    this.agent = this.createAgent()
+    this.agent = await this.createAgent()
     this.agentKey = this.currentAgentKey()
-    await previousAgent[Symbol.asyncDispose]()
+    await disposeCreatedAgent(previousAgent)
   }
 
   private currentAgentKey() {
