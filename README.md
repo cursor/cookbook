@@ -38,9 +38,9 @@ A kanban board for viewing Cursor Cloud Agents, grouping them by status or repos
 
 A minimal command-line interface that lets you spawn Cursor agents from your terminal.
 
-### [DAG task runner](sdk/dag-task-runner)
+### [Test generator](sdk/test-generator)
 
-Decompose a task into a JSON DAG, fan it out across local subagents, and stream live status into a Cursor Canvas that hot-reloads on every state change. Ships as both a runnable example and a copyable Cursor skill at [`.cursor/skills/dag-task-runner`](.cursor/skills/dag-task-runner).
+A CLI that points a Cursor agent at your source files, generates unit tests, runs them, and iterates until they pass. Supports TypeScript/JavaScript (Vitest or Jest) and Python (Pytest), with an interactive Ink TUI.
 
 ### [Perl bridge adapter](sdk/perl-bridge-adapter)
 
