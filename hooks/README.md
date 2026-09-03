@@ -36,6 +36,20 @@ A similar hook can also hand the prompt to a DLP service, secret scanner, or oth
 
 The matching is intentionally broad: conceptually, it behaves like checking whether a blocked repo string appears anywhere in the repo name returned from the git remote. This may match more than an exact repository name. The sample hook is configured with `failClosed: true`, so crashes, timeouts, or invalid JSON fail closed, but the script intentionally returns `continue: true` when no git `origin` remote exists.
 
+### MCP execution audit
+
+`audit-mcp-execution.mjs` is an observational `afterMCPExecution` hook. It records a redacted JSONL audit event at `.cursor/hook-logs/mcp-execution.jsonl` by default. The record includes the tool name, duration, input shape, input keys, result size, and whether the result reports an error.
+
+Tool arguments and MCP results are not written by default. Keys that commonly contain credentials (such as `api_key`, `token`, `password`, and `authorization`) are redacted if verbose logging is enabled. Set `CURSOR_MCP_AUDIT_LOG` to change the destination or `CURSOR_MCP_AUDIT_VERBOSE=1` to include bounded previews after reviewing the privacy implications.
+
+The documented `afterMCPExecution` payload currently includes `tool_name`, `tool_input`, `result_json`, and `duration`; it does not include the MCP server identity. The audit record therefore uses `server: null` rather than guessing a server from the tool name. If a runtime-specific payload supplies `server_name` or `mcp_server`, that value is retained.
+
+Run the self-contained test with:
+
+```bash
+node hooks/.cursor/hooks/test-audit-mcp-execution.mjs
+```
+
 ### Skill update follow-up
 
 `update-skills-on-stop.mjs` runs on `stop`, checks changed files, and asks the agent to update related `.cursor/skills/*/SKILL.md` files when configured code areas changed.
