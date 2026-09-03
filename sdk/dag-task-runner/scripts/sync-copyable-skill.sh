@@ -37,7 +37,7 @@ cat > "$DEST/scripts/package.json" <<'EOF'
     "example": "tsx run_dag.ts --dag ../examples/example_dag.json --canvas-path \"$PWD/.canvas/dag-example.canvas.tsx\""
   },
   "dependencies": {
-    "@cursor/sdk": "^1.0.9"
+    "@cursor/sdk": "^1.0.30"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
