@@ -18,6 +18,9 @@ WORKER_IMAGE_TAG ?= latest
 WORKER_IMAGE ?= cursor-agentcore-worker:local
 WORKER_PLATFORM ?= linux/arm64
 
+# Docker Desktop is optional. Finch at /usr/local/bin/finch is enough to build and push.
+CONTAINER_CLI ?= $(shell command -v docker 2>/dev/null || command -v finch 2>/dev/null || echo /usr/local/bin/finch)
+
 AGENTCORE_CAPACITY_PROVIDER_NAME ?= cursor_worker_lab
 AGENTCORE_RUNTIME_NAME ?= cursor_worker
 AGENTCORE_OPERATING_SYSTEM ?= LINUX_ARM64
@@ -82,7 +85,7 @@ help:
 	@echo "Targets:"
 	@echo "  agentcore-docker-build         Build the adapter worker image for $(WORKER_PLATFORM)"
 	@echo "  agentcore-contract-test        Check the adapter against the AgentCore HTTP contract locally"
-	@echo "  agentcore-ecr-login            Authenticate Docker to ECR"
+	@echo "  agentcore-ecr-login            Authenticate $(CONTAINER_CLI) to ECR"
 	@echo "  agentcore-ecr-build-push       Build and push the worker image to ECR"
 	@echo "  agentcore-put-api-key-secret   Upload CURSOR_API_KEY to Secrets Manager"
 	@echo "  agentcore-terraform-init       Initialize the Terraform working directory"
@@ -98,28 +101,41 @@ help:
 	@echo "  agentcore-logs                 Tail the runtime logs"
 
 agentcore-docker-build:
-	docker buildx build \
+	@if [[ "$(CONTAINER_CLI)" == *finch ]]; then \
+		if ! "$(CONTAINER_CLI)" vm status 2>/dev/null | grep -qi running; then \
+			echo "Starting Finch VM..."; \
+			"$(CONTAINER_CLI)" vm init 2>/dev/null || true; \
+			"$(CONTAINER_CLI)" vm start; \
+		fi; \
+	fi
+	"$(CONTAINER_CLI)" build \
 		--platform "$(WORKER_PLATFORM)" \
 		-f docker/Dockerfile \
 		-t "$(WORKER_IMAGE)" \
-		--load \
 		.
 
 agentcore-contract-test:
-	scripts/local-contract-test.sh
+	CONTAINER_CLI="$(CONTAINER_CLI)" scripts/local-contract-test.sh
 
 agentcore-ecr-login:
 	@if [[ -z "$(AWS_ACCOUNT_ID_RESOLVED)" ]]; then echo "AWS_ACCOUNT_ID or AWS CLI auth is required."; exit 1; fi
 	aws ecr get-login-password --profile "$(AWS_PROFILE)" --region "$(AWS_REGION)" \
-		| docker login --username AWS --password-stdin "$(ECR_REGISTRY)"
+		| "$(CONTAINER_CLI)" login --username AWS --password-stdin "$(ECR_REGISTRY)"
 
 agentcore-ecr-build-push: agentcore-ecr-login
-	docker buildx build \
+	@if [[ "$(CONTAINER_CLI)" == *finch ]]; then \
+		if ! "$(CONTAINER_CLI)" vm status 2>/dev/null | grep -qi running; then \
+			echo "Starting Finch VM..."; \
+			"$(CONTAINER_CLI)" vm init 2>/dev/null || true; \
+			"$(CONTAINER_CLI)" vm start; \
+		fi; \
+	fi
+	"$(CONTAINER_CLI)" build \
 		--platform "$(WORKER_PLATFORM)" \
 		-f docker/Dockerfile \
 		-t "$(ECR_WORKER_IMAGE)" \
-		--push \
 		.
+	"$(CONTAINER_CLI)" push "$(ECR_WORKER_IMAGE)"
 
 agentcore-put-api-key-secret:
 	@if [[ -z "$${CURSOR_API_KEY:-}" ]]; then echo "CURSOR_API_KEY must be set in .env or the shell."; exit 1; fi

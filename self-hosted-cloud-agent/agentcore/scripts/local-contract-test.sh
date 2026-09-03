@@ -22,27 +22,42 @@
 #   AGENTCORE_TEST_PORT      host port to publish (default 8080)
 #   CURSOR_API_KEY           optional; enables the HealthyBusy check
 #   WORKER_REPOSITORY_URL    optional; git remote for the workspace
+#   CONTAINER_CLI            docker or finch binary (default: auto-detect)
 set -euo pipefail
 
 WORKER_IMAGE="${WORKER_IMAGE:-cursor-agentcore-worker:local}"
 PORT="${AGENTCORE_TEST_PORT:-8080}"
 CONTAINER_NAME="cursor-agentcore-contract-test"
 BASE_URL="http://127.0.0.1:${PORT}"
+CONTAINER_CLI="${CONTAINER_CLI:-}"
 
-for tool in docker curl python3; do
+if [[ -z "${CONTAINER_CLI}" ]]; then
+  if command -v docker >/dev/null 2>&1; then
+    CONTAINER_CLI="$(command -v docker)"
+  elif command -v finch >/dev/null 2>&1; then
+    CONTAINER_CLI="$(command -v finch)"
+  elif [[ -x /usr/local/bin/finch ]]; then
+    CONTAINER_CLI="/usr/local/bin/finch"
+  else
+    echo "docker or finch is required but not installed." >&2
+    exit 1
+  fi
+fi
+
+for tool in curl python3; do
   if ! command -v "${tool}" >/dev/null 2>&1; then
     echo "${tool} is required but not installed." >&2
     exit 1
   fi
 done
 
-if ! docker image inspect "${WORKER_IMAGE}" >/dev/null 2>&1; then
+if ! "${CONTAINER_CLI}" image inspect "${WORKER_IMAGE}" >/dev/null 2>&1; then
   echo "Image ${WORKER_IMAGE} not found. Build it first: make agentcore-docker-build" >&2
   exit 1
 fi
 
 cleanup() {
-  docker rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
+  "${CONTAINER_CLI}" rm -f "${CONTAINER_NAME}" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT
 
@@ -50,7 +65,7 @@ fail() {
   echo "FAIL: $*" >&2
   echo
   echo "--- container logs ---" >&2
-  docker logs "${CONTAINER_NAME}" 2>&1 | tail -40 >&2
+  "${CONTAINER_CLI}" logs "${CONTAINER_NAME}" 2>&1 | tail -40 >&2
   exit 1
 }
 
@@ -62,7 +77,7 @@ json_field() {
 cleanup
 
 echo "Starting ${WORKER_IMAGE} as ${CONTAINER_NAME} on port ${PORT}."
-docker run --rm --detach \
+"${CONTAINER_CLI}" run --detach \
   --name "${CONTAINER_NAME}" \
   --publish "${PORT}:8080" \
   --env "CURSOR_API_KEY=${CURSOR_API_KEY:-local-contract-test-placeholder}" \

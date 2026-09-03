@@ -36,7 +36,7 @@ RUN apt-get update \
         jq \
         less \
         openssh-client \
-        python3-minimal \
+        python3 \
         unzip \
     && rm -rf /var/lib/apt/lists/*
 

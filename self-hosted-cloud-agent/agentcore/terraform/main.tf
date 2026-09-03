@@ -190,8 +190,9 @@ resource "aws_vpc_security_group_egress_rule" "dns_tcp" {
 # IAM: capacity provider operator role
 # ---------------------------------------------------------------------------
 
-# The trust policy for this role is not published. It is inferred from the documented
-# execution role trust policy. See OQ-4 in ../REQUIREMENTS.md.
+# Execution-role trust (documented). CreateCapacityProvider validates the operator
+# role by assuming it; that call does not always present aws:SourceArn, so ArnLike
+# there fails with "Role validation failed for the operator role" (OQ-4).
 data "aws_iam_policy_document" "agentcore_assume_role" {
   statement {
     sid     = "AssumeRolePolicy"
@@ -218,10 +219,28 @@ data "aws_iam_policy_document" "agentcore_assume_role" {
   }
 }
 
+data "aws_iam_policy_document" "operator_assume_role" {
+  statement {
+    sid     = "AssumeRolePolicy"
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["bedrock-agentcore.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+}
+
 resource "aws_iam_role" "capacity_provider_operator" {
   name               = "${var.capacity_provider_name}-operator-role"
   description        = "Role AgentCore assumes to provision EC2 instances for the capacity provider."
-  assume_role_policy = data.aws_iam_policy_document.agentcore_assume_role.json
+  assume_role_policy = data.aws_iam_policy_document.operator_assume_role.json
 }
 
 # AWS scopes this policy by the bedrock-agentcore:capacity-provider-id request tag, the
@@ -230,6 +249,29 @@ resource "aws_iam_role" "capacity_provider_operator" {
 resource "aws_iam_role_policy_attachment" "capacity_provider_operator" {
   role       = aws_iam_role.capacity_provider_operator.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/BedrockAgentCoreRuntimeInstancesOperatorRolePolicy"
+}
+
+# The managed operator policy only allows iam:PassRole on
+# AmazonBedrockAgentCoreCapacityProviderDefaultInstanceRole*. A lab-named instance
+# role therefore needs an extra PassRole grant or RunInstances fails with UnauthorizedOperation.
+data "aws_iam_policy_document" "operator_pass_instance_role" {
+  statement {
+    sid       = "PassLabInstanceRole"
+    actions   = ["iam:PassRole"]
+    resources = [aws_iam_role.instance.arn]
+
+    condition {
+      test     = "StringLike"
+      variable = "iam:PassedToService"
+      values   = ["ec2.amazonaws.com", "ec2.amazonaws.com.cn"]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "operator_pass_instance_role" {
+  name   = "${var.capacity_provider_name}-pass-instance-role"
+  role   = aws_iam_role.capacity_provider_operator.id
+  policy = data.aws_iam_policy_document.operator_pass_instance_role.json
 }
 
 # ---------------------------------------------------------------------------
@@ -251,7 +293,8 @@ data "aws_iam_policy_document" "ec2_assume_role" {
 # This role exists only so the instance can ship its own system logs. It grants nothing to
 # agent code; the runtime execution role does that.
 resource "aws_iam_role" "instance" {
-  name               = "${var.capacity_provider_name}-instance-role"
+  # Managed operator policy only PassRoles this name prefix.
+  name               = "AmazonBedrockAgentCoreCapacityProviderDefaultInstanceRole-lab"
   description        = "Instance role used by AgentCore to collect system logs."
   assume_role_policy = data.aws_iam_policy_document.ec2_assume_role.json
 }
@@ -308,6 +351,7 @@ data "aws_iam_policy_document" "runtime_execution" {
   statement {
     sid = "PullWorkerImage"
     actions = [
+      "ecr:BatchCheckLayerAvailability",
       "ecr:BatchGetImage",
       "ecr:GetDownloadUrlForLayer",
     ]
@@ -445,6 +489,7 @@ resource "aws_cloudcontrolapi_resource" "capacity_provider" {
 
   depends_on = [
     aws_iam_role_policy_attachment.capacity_provider_operator,
+    aws_iam_role_policy.operator_pass_instance_role,
     aws_iam_role_policy_attachment.instance,
   ]
 }
