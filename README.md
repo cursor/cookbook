@@ -42,6 +42,10 @@ A minimal command-line interface that lets you spawn Cursor agents from your ter
 
 Decompose a task into a JSON DAG, fan it out across local subagents, and stream live status into a Cursor Canvas that hot-reloads on every state change. Ships as both a runnable example and a copyable Cursor skill at [`.cursor/skills/dag-task-runner`](.cursor/skills/dag-task-runner).
 
+### [Reconnect / retry signal](sdk/reconnect-signal)
+
+Public `onConnectionStateChange` and `RETRYING` stream status for headless `@cursor/sdk` embedders. Pause idle timeouts while the SDK is reconnecting so a transport retry is not mistaken for a dead model.
+
 ### [Perl bridge adapter](sdk/perl-bridge-adapter)
 
 A miniature Cursor SDK in Perl on the open [`sdk.v1` bridge](https://github.com/cursor/sdk-bridge). Shows how to spawn `cursor-sdk-bridge`, speak Connect JSON, and run one local agent turn without a first-party SDK.
