@@ -1,4 +1,5 @@
-import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process"
+import spawn from "cross-spawn"
+import type { ChildProcess } from "node:child_process"
 import { randomUUID } from "node:crypto"
 import { promises as fs } from "node:fs"
 import net from "node:net"
@@ -27,7 +28,7 @@ type BuilderSession = {
   port: number
   logs: string[]
   ready: Promise<void>
-  devProcess?: ChildProcessWithoutNullStreams
+  devProcess?: ChildProcess
   agent?: SDKAgent
   setupError?: string
 }
@@ -936,7 +937,7 @@ function runCommand(
 }
 
 function pipeProcessLogs(
-  child: ChildProcessWithoutNullStreams,
+  child: ChildProcess,
   session: BuilderSession,
   label: string
 ) {
@@ -945,8 +946,8 @@ function pipeProcessLogs(
     session.logs.splice(0, Math.max(0, session.logs.length - 200))
   }
 
-  child.stdout.on("data", append)
-  child.stderr.on("data", append)
+  child.stdout?.on("data", append)
+  child.stderr?.on("data", append)
 }
 
 function waitForPort(port: number, timeoutMs = 30_000): Promise<void> {
