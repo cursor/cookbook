@@ -43,12 +43,12 @@ Run the included example DAG end-to-end:
 pnpm example
 ```
 
-The example builds a tiny single-file CLI todo app. Tasks run against `process.cwd()` by default, so use a scratch directory if you don't want files written into the cookbook:
+The example builds a tiny single-file CLI todo app. Tasks run against `process.cwd()` by default, so use a scratch directory if you don't want files written into the sciencebook:
 
 ```bash
 mkdir -p /tmp/dag-demo && cd /tmp/dag-demo
 CURSOR_API_KEY="crsr_..." \
-  pnpm --dir ~/Code/cookbook/sdk/dag-task-runner \
+  pnpm --dir ~/Code/sciencebook/sdk/dag-task-runner \
   dev -- --dag examples/example_dag.json --canvas-path "$PWD/dag-example.canvas.tsx" --cwd "$PWD"
 ```
 
