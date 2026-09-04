@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "grok-coding-agent-cli"
+version = "0.1.0"
+description = "A small Grok coding-agent CLI powered by the xAI API"
+requires-python = ">=3.10"
+dependencies = ["xai-sdk==1.19.0"]
+
+[project.scripts]
+grok-code-agent = "grok_coding_agent:main"
+
+[tool.setuptools]
+py-modules = ["grok_coding_agent"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]

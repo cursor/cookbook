@@ -1,0 +1,38 @@
+[build-system]
+requires = ["setuptools>=80"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "grok-voice-patient-intake"
+version = "0.1.0"
+description = "A LiveKit patient-intake agent using the xAI realtime voice API"
+requires-python = ">=3.10,<3.15"
+dependencies = [
+  "livekit-agents==1.7.1",
+  "livekit-plugins-xai==1.7.1",
+  "python-dotenv==1.2.3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest==9.1.1",
+  "pytest-asyncio==1.4.0",
+  "ruff==0.16.5",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["A", "B", "E", "F", "I", "N", "RUF", "SIM", "UP", "W"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+py-modules = ["agent", "clinic"]
