@@ -241,12 +241,53 @@ class WorkerSupervisor:
             )
         return api_key
 
-    def prepare_workspace(self) -> None:
-        """Create the worker directory and give it a git origin.
+    def _git_env(self) -> dict[str, str]:
+        """Drop inherited GIT_* so AgentCore cannot redirect git into another work tree."""
+        env = {
+            key: value
+            for key, value in os.environ.items()
+            if not key.startswith("GIT_")
+        }
+        env["GIT_TERMINAL_PROMPT"] = "0"
+        return env
 
-        Cursor derives the repo label from this remote and worker startup fails without it.
-        This must be idempotent because the EBS volume persists across session restarts and
-        will already be initialized on the second start.
+    def _git(self, *args: str, check: bool = True, timeout: int = 120) -> subprocess.CompletedProcess:
+        """Run git in the worker directory, ignoring inherited GIT_* from the runtime."""
+        worker_dir = self.config.worker_dir
+        result = subprocess.run(
+            ["git", "-c", f"safe.directory={worker_dir}", "-C", worker_dir, *args],
+            capture_output=True,
+            text=True,
+            env=self._git_env(),
+            timeout=timeout,
+        )
+        if check and result.returncode != 0:
+            detail = (result.stderr or result.stdout).strip() or f"exit {result.returncode}"
+            raise RuntimeError(f"git {' '.join(args)} failed: {detail}")
+        return result
+
+    def _checkout_origin_head(self) -> None:
+        """Point the workspace at origin's default branch after a fetch."""
+        self._git("remote", "set-head", "origin", "--auto", check=False)
+        symbolic = self._git(
+            "symbolic-ref", "--quiet", "refs/remotes/origin/HEAD", check=False
+        )
+        if symbolic.returncode == 0:
+            ref = symbolic.stdout.strip()
+            branch = ref.rsplit("/", 1)[-1]
+        else:
+            branch = "main"
+        self._git("checkout", "-B", branch, f"origin/{branch}")
+        log(f"checked out origin/{branch}")
+
+    def prepare_workspace(self) -> None:
+        """Clone WORKER_REPOSITORY_URL into the persistent workspace.
+
+        Cursor derives the repo label from origin plus a real HEAD. An empty `git init`
+        with only a remote set advertises `Repo: (repo unavailable)` and Cloud Agents
+        cannot attach the GitHub repo or open PRs against it.
+
+        Idempotent: a later session on the same EBS volume fetches instead of recloning.
         """
         worker_dir = self.config.worker_dir
         os.makedirs(worker_dir, exist_ok=True)
@@ -258,21 +299,27 @@ class WorkerSupervisor:
 
         if not os.path.isdir(os.path.join(worker_dir, ".git")):
             log(f"initializing {worker_dir} as a git repository")
-            subprocess.run(
-                ["git", "init", "--initial-branch=main", worker_dir],
-                check=True, capture_output=True, text=True,
-            )
+            self._git("init", "--initial-branch=main")
 
-        # Remove then add, so a persisted volume with a stale remote converges.
-        subprocess.run(
-            ["git", "-C", worker_dir, "remote", "remove", "origin"],
-            capture_output=True, text=True,
-        )
-        subprocess.run(
-            ["git", "-C", worker_dir, "remote", "add", "origin", url],
-            check=True, capture_output=True, text=True,
-        )
+        existing = self._git("remote", "get-url", "origin", check=False)
+        if existing.returncode == 0:
+            self._git("remote", "set-url", "origin", url)
+        else:
+            self._git("remote", "add", "origin", url)
         log(f"git origin set to {url}")
+
+        log(f"fetching {url}")
+        self._git("fetch", "--prune", "origin", timeout=600)
+
+        head = self._git("rev-parse", "--verify", "HEAD", check=False)
+        if head.returncode != 0:
+            self._checkout_origin_head()
+        else:
+            log(f"workspace HEAD is {head.stdout.strip()[:12]}")
+
+        origin = self._git("remote", "get-url", "origin").stdout.strip()
+        branch = self._git("rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
+        log(f"workspace ready: {origin} @ {branch}")
 
     def resolve_labels_file(self) -> str | None:
         """Write CURSOR_WORKER_LABELS_JSON to a file if provided, else use the baked file."""
@@ -320,8 +367,10 @@ class WorkerSupervisor:
             self.state.mark_failed(str(exc))
             return
 
-        worker_env = os.environ.copy()
+        worker_env = self._git_env()
         worker_env["CURSOR_API_KEY"] = api_key
+        # The agent CLI reads the repo label from cwd's git remote. Pin cwd so a
+        # leftover GIT_DIR from the runtime cannot hide /mnt/workspace.
 
         command = self.build_command()
         log("worker command: " + " ".join(command))
@@ -330,7 +379,11 @@ class WorkerSupervisor:
         while not self._stop.is_set():
             self._restart_requested.clear()
             try:
-                process = subprocess.Popen(command, env=worker_env)  # noqa: S603
+                process = subprocess.Popen(  # noqa: S603
+                    command,
+                    env=worker_env,
+                    cwd=self.config.worker_dir,
+                )
             except Exception as exc:  # noqa: BLE001
                 log(f"could not start the worker: {exc}")
                 self.state.mark_failed(str(exc))

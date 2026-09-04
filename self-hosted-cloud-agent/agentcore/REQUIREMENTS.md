@@ -104,10 +104,11 @@ repositories and caches dependencies. Instances is the only compute type that fi
   `CURSOR_WORKER_LABELS_FILE`, `CURSOR_WORKER_LABELS_JSON`, `WORKER_REPOSITORY_URL`.
 - **FR-10** Default `CURSOR_WORKER_DIR` to `/mnt/workspace`, not `/workspace`. Mount paths for
   capacity provider volumes "must be under `/mnt` with exactly one subdirectory level."
-- **FR-11** Initialize the worker directory as a git repository with an `origin` remote when
-  `WORKER_REPOSITORY_URL` is set, and make it idempotent, because the volume persists across restarts
-  and will already be initialized on the second session start. Cursor derives the repo label from this
-  remote and startup fails without it.
+- **FR-11** When `WORKER_REPOSITORY_URL` is set, initialize `/mnt/workspace` as a git
+  repository, set `origin` to that URL, **fetch the remote, and check out origin's default
+  branch**. An empty `git init` with only a remote is not enough: the worker then reports
+  `Repo: (repo unavailable)` and Cloud Agents cannot open PRs against the GitHub repo.
+  The setup must be idempotent because the volume persists across session restarts.
 
 ### 4.3 Secrets
 
