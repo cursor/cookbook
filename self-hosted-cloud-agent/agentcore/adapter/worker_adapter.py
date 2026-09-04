@@ -266,18 +266,76 @@ class WorkerSupervisor:
             raise RuntimeError(f"git {' '.join(args)} failed: {detail}")
         return result
 
-    def _checkout_origin_head(self) -> None:
-        """Point the workspace at origin's default branch after a fetch."""
+    @staticmethod
+    def _https_repository_url(url: str) -> str:
+        """Rewrite GitHub SSH remotes to HTTPS.
+
+        The capacity provider security group allows egress on 443 and 53 only, so
+        `git@github.com:...` and `ssh://git@github.com/...` cannot fetch from AWS.
+        """
+        if url.startswith("git@github.com:"):
+            return "https://github.com/" + url.removeprefix("git@github.com:")
+        if url.startswith("ssh://git@github.com/"):
+            return "https://github.com/" + url.removeprefix("ssh://git@github.com/")
+        return url
+
+    def _ensure_git_directory(self) -> None:
+        """Make /mnt/workspace a real repository, not an AgentCore gitfile/worktree."""
+        worker_dir = self.config.worker_dir
+        git_path = os.path.join(worker_dir, ".git")
+        if os.path.isfile(git_path):
+            log(f"replacing gitfile {git_path} with a real repository")
+            os.remove(git_path)
+        if not os.path.isdir(git_path):
+            log(f"initializing {worker_dir} as a git repository")
+            self._git("init", "--initial-branch=main")
+
+    def _origin_default_branch(self) -> str:
+        """Resolve origin's default branch from fetched remote-tracking refs."""
         self._git("remote", "set-head", "origin", "--auto", check=False)
         symbolic = self._git(
             "symbolic-ref", "--quiet", "refs/remotes/origin/HEAD", check=False
         )
+        prefix = "refs/remotes/origin/"
         if symbolic.returncode == 0:
             ref = symbolic.stdout.strip()
-            branch = ref.rsplit("/", 1)[-1]
-        else:
-            branch = "main"
-        self._git("checkout", "-B", branch, f"origin/{branch}")
+            if ref.startswith(prefix):
+                return ref[len(prefix) :]
+
+        for candidate in ("main", "master"):
+            probe = self._git(
+                "rev-parse", "--verify", f"{prefix}{candidate}", check=False
+            )
+            if probe.returncode == 0:
+                return candidate
+
+        listed = self._git(
+            "for-each-ref",
+            "--format=%(refname:short)",
+            "--count=1",
+            "refs/remotes/origin",
+        )
+        name = listed.stdout.strip()
+        if name.startswith("origin/"):
+            branch = name[len("origin/") :]
+            if branch and branch != "HEAD":
+                return branch
+        raise RuntimeError(
+            "fetch succeeded but origin has no branches to check out. "
+            "If WORKER_REPOSITORY_URL is SSH, use an https:// GitHub URL; "
+            "AgentCore workers can only reach the network on port 443."
+        )
+
+    def _checkout_origin_head(self) -> None:
+        """Point the workspace at origin's default branch after a fetch.
+
+        Uses the full remote-tracking ref and --force. `git checkout -B main origin/main`
+        fails with "is not a commit" when fetch wrote only FETCH_HEAD (empty
+        `remote.origin.fetch`), and git then treats `origin/main` as a pathspec.
+        """
+        branch = self._origin_default_branch()
+        start = f"refs/remotes/origin/{branch}"
+        self._git("checkout", "--force", "-B", branch, start)
         log(f"checked out origin/{branch}")
 
     def prepare_workspace(self) -> None:
@@ -292,24 +350,36 @@ class WorkerSupervisor:
         worker_dir = self.config.worker_dir
         os.makedirs(worker_dir, exist_ok=True)
 
-        url = self.config.repository_url
+        url = self._https_repository_url(self.config.repository_url.strip())
         if not url:
             log("WORKER_REPOSITORY_URL is unset, skipping git initialization")
             return
+        if url != self.config.repository_url.strip():
+            log(f"rewrote SSH remote to HTTPS: {url}")
 
-        if not os.path.isdir(os.path.join(worker_dir, ".git")):
-            log(f"initializing {worker_dir} as a git repository")
-            self._git("init", "--initial-branch=main")
+        self._ensure_git_directory()
 
         existing = self._git("remote", "get-url", "origin", check=False)
         if existing.returncode == 0:
             self._git("remote", "set-url", "origin", url)
         else:
             self._git("remote", "add", "origin", url)
+        # AgentCore gitconfig (or a previous broken init) can leave this empty.
+        # `git fetch origin` then updates only FETCH_HEAD, and checkout of
+        # origin/<branch> fails with "is not a commit".
+        self._git(
+            "config", "remote.origin.fetch", "+refs/heads/*:refs/remotes/origin/*"
+        )
         log(f"git origin set to {url}")
 
         log(f"fetching {url}")
-        self._git("fetch", "--prune", "origin", timeout=600)
+        self._git(
+            "fetch",
+            "--prune",
+            "origin",
+            "+refs/heads/*:refs/remotes/origin/*",
+            timeout=600,
+        )
 
         head = self._git("rev-parse", "--verify", "HEAD", check=False)
         if head.returncode != 0:

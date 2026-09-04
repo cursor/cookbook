@@ -133,6 +133,14 @@ Changing instance types, networking, or storage on the capacity provider **repla
 
 After changing the adapter or the Dockerfile, publish a new image and start a fresh session. A running session does not pull a new image.
 
+### GitHub Project Kickoff (`agent-*` issues)
+
+Issues on `skopp002/kaushalavardhanam` whose title starts with `agent-` are picked up when they move to **In Progress** on [Mitra Backlog](https://github.com/users/skopp002/projects/2/views/1). The workflow lives in that repo (`.github/workflows/cursor-agent-in-progress.yml`) and launches a Cloud Agent on pool `agentcore-platform-agents` with `autoCreatePR` against `main`.
+
+A user-owned project does not fire a GitHub Actions event on drag, so the workflow polls every five minutes. It also starts immediately if you add the `in-progress` label or run the workflow manually.
+
+The AgentCore session must already be `HealthyBusy` or the job sits in the pool until a worker registers.
+
 ## Validation
 
 A healthy deployment has:
