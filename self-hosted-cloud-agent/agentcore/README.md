@@ -135,9 +135,11 @@ After changing the adapter or the Dockerfile, publish a new image and start a fr
 
 ### GitHub Project Kickoff (`agent-*` issues)
 
-Issues on `skopp002/kaushalavardhanam` whose title starts with `agent-` are picked up when they move to **In Progress** on [Mitra Backlog](https://github.com/users/skopp002/projects/2/views/1). The workflow lives in that repo (`.github/workflows/cursor-agent-in-progress.yml`) and launches a Cloud Agent on pool `agentcore-platform-agents` with `autoCreatePR` against `main`.
+`github/` in this lab is a **template**. Copy it into the application repository the pool worker should clone and PR against — not into this cookbook. **Kaushalavardhanam** (`kaushalavardhanam/kaushalavardhanam` and [org project 1](https://github.com/orgs/kaushalavardhanam/projects/1)) is the sample application used to exercise the lab. Point `WORKER_REPOSITORY_URL`, the workflow `PROJECT_*` env, and the Cursor GitHub App at your own repo when you are not running that sample.
 
-A user-owned project does not fire a GitHub Actions event on drag, so the workflow polls every five minutes. It also starts immediately if you add the `in-progress` label or run the workflow manually.
+Issues whose title starts with `agent-` are picked up when they move to **In Progress** on that application’s project board. The workflow in the application repo launches a Cloud Agent on pool `agentcore-platform-agents` with `autoCreatePR` against `main`.
+
+A project board does not fire a GitHub Actions event on drag, so the workflow polls every five minutes. It also starts immediately if you add the `in-progress` label or run the workflow manually. `GH_PROJECT_TOKEN` must be able to read that board’s Projects v2.
 
 The AgentCore session must already be `HealthyBusy` or the job sits in the pool until a worker registers.
 

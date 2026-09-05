@@ -175,7 +175,7 @@ variable "worker_idle_release_timeout" {
 }
 
 variable "worker_repository_url" {
-  description = "Git remote the worker directory is initialized with. Cursor derives the repo label from this remote."
+  description = "Git remote of the application repo Cloud Agents work on (not this cookbook). Sample lab: https://github.com/kaushalavardhanam/kaushalavardhanam.git"
   type        = string
 }
 

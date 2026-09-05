@@ -1,10 +1,16 @@
-# Kick a Cursor Cloud Agent on the AgentCore self-hosted pool when an
-# `agent-*` issue moves to In Progress on https://github.com/users/skopp002/projects/2
+# Template GitHub Actions workflow for the AgentCore lab in cursor-cookbook.
+# Copy this file into the *application* repository Cloud Agents should patch
+# (this cookbook is the worker/runtime, not that application).
 #
-# Required repo secrets:
+# Sample values below match the lab's example app:
+#   https://github.com/kaushalavardhanam/kaushalavardhanam
+#   https://github.com/orgs/kaushalavardhanam/projects/1
+# Replace PROJECT_OWNER, PROJECT_NUMBER, and the PAT scopes for your own org/repo.
+#
+# Required repo secrets on the application repo:
 #   CURSOR_API_KEY     Cursor service account key (same value as the AgentCore worker)
-#   GH_PROJECT_TOKEN   Fine-grained PAT with Projects: Read (user skopp002) and
-#                      repository access to this repo. GITHUB_TOKEN cannot read user projects.
+#   GH_PROJECT_TOKEN   Fine-grained PAT: Projects: Read on the org/user that owns the
+#                      board, plus repository access. GITHUB_TOKEN cannot read Projects v2.
 #
 # The AgentCore worker session must already be HealthyBusy or the job waits in the pool.
 name: Cursor agent on In Progress
@@ -37,8 +43,9 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           CURSOR_POOL_NAME: agentcore-platform-agents
-          PROJECT_OWNER: skopp002
-          PROJECT_NUMBER: "2"
+          PROJECT_OWNER: kaushalavardhanam
+          PROJECT_OWNER_TYPE: organization
+          PROJECT_NUMBER: "1"
           ISSUE_NUMBER: ${{ github.event.inputs.issue_number || github.event.issue.number }}
           LABEL_NAME: ${{ github.event.label.name }}
         run: python3 .github/scripts/kick_cursor_agent.py
