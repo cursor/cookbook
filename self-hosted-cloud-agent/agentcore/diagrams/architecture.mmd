@@ -1,0 +1,53 @@
+%% Simple component view. Render PNG: python3 diagrams/render_architecture.py
+%% Run = operating picture. AWS rectangle inside Run is account resources only.
+%% AgentCore Runtime + Capacity Provider are the AWS-managed control plane and
+%% sit in AWS but OUTSIDE the customer VPC. Only the managed instance and its
+%% EBS volume are VPC-resident (Instances is VPC-only; the runtime inherits
+%% networking from the capacity provider and takes no networkConfiguration).
+%% Cursor and GitHub Actions stay in Run, outside AWS.
+flowchart LR
+  OP[Operator]
+  CB[cursor-cookbook]
+  GH[Sample repo]
+  SM[Secrets Manager]
+  ECR[Amazon ECR]
+  RT[AgentCore Runtime + Capacity Provider]
+  EC2[Managed instance]
+  EBS[EBS /mnt/workspace]
+  CA[Cursor Cloud Agents]
+  GHA[GitHub Actions]
+
+  subgraph RUN["Run"]
+    subgraph AWS["AWS"]
+      subgraph CTRL["AgentCore control plane (AWS-managed)"]
+        RT
+      end
+      subgraph CRED["Credentials"]
+        SM
+        ECR
+      end
+      subgraph VPC["Customer VPC (egress only)"]
+        EC2
+        EBS
+      end
+    end
+    CA
+    GHA
+  end
+
+  OP -->|operate from factory| CB
+  CB -->|1 copy github/ templates| GH
+  OP -->|2 grant GitHub App| GH
+  OP -.->|3 put-secret API key + git token| SM
+  CB -.->|4 push image| ECR
+  OP -.->|5 gh secret set| GH
+  OP -->|6 InvokeAgentRuntime| RT
+  RT -->|7 provision + launch instance in VPC| EC2
+  ECR -->|8 image pull| EC2
+  SM -->|9 secret values| EC2
+  EBS -->|10 mount workspace| EC2
+  EC2 -->|11 worker dials Cursor| CA
+  GH -->|12 event starts workflow| GHA
+  GHA -->|13 POST /v1/agents| CA
+  EC2 -->|14 git push CURSOR_GIT_TOKEN| GH
+  CA -->|15 autoCreatePR| GH

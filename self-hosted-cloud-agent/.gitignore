@@ -33,6 +33,17 @@ aws-exports.*
 secrets/
 credentials*
 
+# Python
+__pycache__
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Laptop-only; never commit
+agentcore/docs/aws-blog-draft.md
+
 # Local scratch
 .DS_Store
 tmp/

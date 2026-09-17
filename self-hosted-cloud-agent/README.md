@@ -11,9 +11,11 @@ Workers connect outbound to Cursor over HTTPS. No inbound access to the worker i
 | EC2 + Docker | [`ec2/README.md`](ec2/README.md) | [`ec2/terraform/README.md`](ec2/terraform/README.md) |
 | ECS/Fargate | [`ecs/README.md`](ecs/README.md) | [`ecs/terraform/README.md`](ecs/terraform/README.md) |
 | EKS + Helm | [`eks/README.md`](eks/README.md) | [Official Kubernetes guide](https://cursor.com/docs/cloud-agent/self-hosted-guides/kubernetes) |
+| AgentCore Runtime | [`agentcore/README.md`](agentcore/README.md) | [`agentcore/terraform/README.md`](agentcore/terraform/README.md) |
 
 Use the general READMEs for architecture, trade-offs, validation expectations, and troubleshooting. Use the implementation READMEs when you need copy-paste setup commands.
 
 - EC2 + Docker is the smallest footprint and runs one worker container on one host.
 - ECS/Fargate is the AWS-native service path with CloudWatch metrics and ECS Service Auto Scaling.
 - EKS + Helm is the Kubernetes path, documented in the official [Kubernetes deployment guide](https://cursor.com/docs/cloud-agent/self-hosted-guides/kubernetes), which covers the Cursor worker-set controller, `WorkerDeployment` resources, scaling, and rolling updates.
+- AgentCore Runtime is the Amazon Bedrock AgentCore path, for customers standardizing agent workloads on AgentCore. Sessions run up to 14 days on EC2 instances in your account with a persistent EBS workspace, but there is no service abstraction: a worker exists only after `InvokeAgentRuntime`.
