@@ -176,7 +176,7 @@ Run this after editing `src/`, `skill/SKILL.md`, `examples/`, `package.json`, or
 ```
 sdk/dag-task-runner/
 ├── README.md                     # this file
-├── package.json                  # @cursor/sdk ^1.0.9, tsx, typescript
+├── package.json                  # @cursor/sdk ^1.0.35, tsx, typescript
 ├── tsconfig.json
 ├── pnpm-workspace.yaml
 ├── src/

@@ -17,7 +17,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@cursor/sdk": "^1.0.7",
+    "@cursor/sdk": "^1.0.35",
     "@opentui/core": "^0.2.0",
     "@opentui/react": "^0.2.0",
     "react": "^19.2.5"
