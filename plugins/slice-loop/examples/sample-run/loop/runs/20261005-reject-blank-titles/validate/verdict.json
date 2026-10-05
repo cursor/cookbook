@@ -1,0 +1,11 @@
+{
+  "verdict": "pass",
+  "head": "c4a8758bc9769c70799308b5e977fd0c33e4efe6",
+  "gates": { "lint": "pass", "test": "pass", "e2e": "pass", "contract": "pass" },
+  "acceptance": { "AC-1": "PASS", "AC-2": "PASS", "AC-3": "PASS", "AC-4": "PASS", "AC-5": "PASS" },
+  "failures": [],
+  "notes": [
+    "blank-title flow recorded 2 browser console lines 'Failed to load resource: ... 400 (Bad Request)'; they are Chrome's log of the 400 responses AC-4 requires, with no pageerror. Not classified as impl-bug. Evidence: raw/flows.json"
+  ],
+  "route": null
+}

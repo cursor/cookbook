@@ -1,0 +1,5 @@
+# compressed log: 4 lines in, 4 lines out, 0 failure-like lines
+
+> tasks-app@0.1.0 lint
+> node --check server.js && node --check src/tasks.js && node --check public/app.js
+

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tasks</title>
+    <style>
+      body { font-family: system-ui, sans-serif; background: #f7f7f4; color: #26251e; margin: 0; }
+      main { max-width: 560px; margin: 48px auto; padding: 0 16px; }
+      h1 { font-size: 28px; margin-bottom: 16px; }
+      form { display: flex; gap: 8px; margin-bottom: 16px; }
+      input { flex: 1; padding: 10px 12px; border: 1px solid #e1e0db; border-radius: 8px; font-size: 15px; }
+      button { padding: 10px 16px; border: 0; border-radius: 8px; background: #f54e00; color: white; font-weight: 600; cursor: pointer; }
+      ul { list-style: none; padding: 0; margin: 0; }
+      li { background: #f2f1ed; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; }
+      .empty { color: rgba(38, 37, 30, 0.6); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Tasks</h1>
+      <form id="add-form">
+        <label for="title" hidden>Task title</label>
+        <input id="title" name="title" placeholder="What needs doing?" aria-label="Task title" />
+        <button type="submit">Add</button>
+      </form>
+      <ul id="list" aria-label="Tasks"></ul>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

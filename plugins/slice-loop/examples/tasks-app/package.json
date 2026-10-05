@@ -1,0 +1,15 @@
+{
+  "name": "tasks-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minimal task list used to dry-run the Slice Loop plugin.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/*.test.js",
+    "lint": "node --check server.js && node --check src/tasks.js && node --check public/app.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

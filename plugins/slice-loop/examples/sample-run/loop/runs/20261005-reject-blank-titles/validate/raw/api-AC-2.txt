@@ -1,0 +1,13 @@
+# AC-2 — real HTTP against the booted server (http://127.0.0.1:4319)
+$ curl -s http://127.0.0.1:4319/api/tasks   # before
+[{"id":1,"title":"Draft the quarterly report","done":false},{"id":2,"title":"Book venue for offsite","done":false}]
+
+$ curl -si -X POST http://127.0.0.1:4319/api/tasks -H "content-type: application/json" -d '{"title":" \t\n "}'
+HTTP/1.1 400 Bad Request
+content-type: application/json
+
+{"error":"Title is required"}
+
+
+$ curl -s http://127.0.0.1:4319/api/tasks   # after
+[{"id":1,"title":"Draft the quarterly report","done":false},{"id":2,"title":"Book venue for offsite","done":false}]

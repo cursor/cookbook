@@ -1,0 +1,21 @@
+{
+  "name": "slice-loop-marketplace",
+  "owner": {
+    "name": "Cursor Field Engineering"
+  },
+  "metadata": {
+    "description": "Slice Loop: an adaptable, test-driven autonomous build loop for cloud agents."
+  },
+  "plugins": [
+    {
+      "name": "slice-loop",
+      "source": ".",
+      "description": "Template skills (/plan-tasks, /scaffold, /implement, /validate, /reflect), the /create-loop onboarding skill that adapts them to a codebase, and the implement-slice subagent that runs the loop.",
+      "version": "0.1.0",
+      "license": "MIT",
+      "keywords": ["tdd", "autonomous-loop", "cloud-agents", "validation"],
+      "category": "developer-tools",
+      "tags": ["workflow", "testing", "validation"]
+    }
+  ]
+}

@@ -1,0 +1,142 @@
+diff --git a/public/app.js b/public/app.js
+index 20c83dd..5a47d69 100644
+--- a/public/app.js
++++ b/public/app.js
+@@ -1,6 +1,7 @@
+ const list = document.getElementById("list");
+ const form = document.getElementById("add-form");
+ const input = document.getElementById("title");
++const error = document.getElementById("title-error");
+ 
+ function render(tasks) {
+   list.innerHTML = "";
+@@ -25,11 +26,16 @@ async function refresh() {
+ 
+ form.addEventListener("submit", async (event) => {
+   event.preventDefault();
+-  await fetch("/api/tasks", {
++  const res = await fetch("/api/tasks", {
+     method: "POST",
+     headers: { "content-type": "application/json" },
+     body: JSON.stringify({ title: input.value }),
+   });
++  if (!res.ok) {
++    error.textContent = (await res.json()).error;
++    return;
++  }
++  error.textContent = "";
+   input.value = "";
+   await refresh();
+ });
+diff --git a/public/index.html b/public/index.html
+index 8887515..cd73fed 100644
+--- a/public/index.html
++++ b/public/index.html
+@@ -14,6 +14,8 @@
+       ul { list-style: none; padding: 0; margin: 0; }
+       li { background: #f2f1ed; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; }
+       .empty { color: rgba(38, 37, 30, 0.6); }
++      .error { color: #f54e00; font-size: 14px; margin: -8px 0 16px; }
++      .error:empty { display: none; }
+     </style>
+   </head>
+   <body>
+@@ -21,9 +23,10 @@
+       <h1>Tasks</h1>
+       <form id="add-form">
+         <label for="title" hidden>Task title</label>
+-        <input id="title" name="title" placeholder="What needs doing?" aria-label="Task title" />
++        <input id="title" name="title" placeholder="What needs doing?" aria-label="Task title" aria-describedby="title-error" />
+         <button type="submit">Add</button>
+       </form>
++      <p id="title-error" class="error" role="alert"></p>
+       <ul id="list" aria-label="Tasks"></ul>
+     </main>
+     <script type="module" src="/app.js"></script>
+diff --git a/server.js b/server.js
+index 695be12..df6f8d0 100644
+--- a/server.js
++++ b/server.js
+@@ -26,6 +26,7 @@ const server = createServer(async (req, res) => {
+     if (req.url === "/api/tasks" && req.method === "GET") return json(res, 200, store.list());
+     if (req.url === "/api/tasks" && req.method === "POST") {
+       const { title } = await readBody(req);
++      if (typeof title !== "string" || !title.trim()) return json(res, 400, { error: "Title is required" });
+       return json(res, 201, store.add(title));
+     }
+     const path = req.url === "/" ? "/index.html" : req.url;
+diff --git a/test/api.test.js b/test/api.test.js
+new file mode 100644
+index 0000000..c700973
+--- /dev/null
++++ b/test/api.test.js
+@@ -0,0 +1,69 @@
++import { test, before, after } from "node:test";
++import assert from "node:assert/strict";
++import { spawn } from "node:child_process";
++import { createServer } from "node:net";
++import { fileURLToPath } from "node:url";
++
++const SERVER = fileURLToPath(new URL("../server.js", import.meta.url));
++let server;
++let BASE;
++
++const freePort = () =>
++  new Promise((resolve) => {
++    const probe = createServer().listen(0, "127.0.0.1", () => {
++      const { port } = probe.address();
++      probe.close(() => resolve(port));
++    });
++  });
++
++before(async () => {
++  const port = await freePort();
++  BASE = `http://127.0.0.1:${port}`;
++  server = spawn(process.execPath, [SERVER], { env: { ...process.env, PORT: String(port), SEED: "0" } });
++  await new Promise((resolve, reject) => {
++    server.once("error", reject);
++    server.once("exit", (code) => reject(new Error(`server exited early with code ${code}`)));
++    server.stdout.on("data", (chunk) => {
++      if (String(chunk).includes("tasks-app on")) resolve();
++    });
++  });
++});
++
++after(() => server?.kill());
++
++const post = (body) =>
++  fetch(`${BASE}/api/tasks`, {
++    method: "POST",
++    headers: { "content-type": "application/json" },
++    body: JSON.stringify(body),
++  });
++
++const titles = async () => (await (await fetch(`${BASE}/api/tasks`)).json()).map((t) => t.title);
++
++async function assertRejected(body) {
++  const before = await titles();
++  const res = await post(body);
++  assert.equal(res.status, 400);
++  assert.match(res.headers.get("content-type") ?? "", /application\/json/);
++  assert.deepEqual(await res.json(), { error: "Title is required" });
++  assert.deepEqual(await titles(), before);
++}
++
++test("AC-1: rejects an empty title with 400 and creates no task", async () => {
++  await assertRejected({ title: "" });
++});
++
++test("AC-2: rejects a whitespace-only title with 400 and creates no task", async () => {
++  await assertRejected({ title: "   " });
++  await assertRejected({ title: " \t\n " });
++});
++
++test("AC-3: rejects a missing title with 400 and creates no task", async () => {
++  await assertRejected({});
++});
++
++test("still creates a task from a valid title", async () => {
++  const res = await post({ title: "  Ship it " });
++  assert.equal(res.status, 201);
++  assert.equal((await res.json()).title, "Ship it");
++});

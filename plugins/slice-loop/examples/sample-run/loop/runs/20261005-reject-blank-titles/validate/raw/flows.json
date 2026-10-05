@@ -1,0 +1,112 @@
+{
+  "blank-title": {
+    "flow": "blank-title",
+    "ok": true,
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "steps": [
+      {
+        "name": "open board",
+        "status": "pass",
+        "ms": 43
+      },
+      {
+        "name": "count tasks",
+        "status": "pass",
+        "ms": 1
+      },
+      {
+        "name": "AC-4: submit empty title",
+        "status": "pass",
+        "ms": 87
+      },
+      {
+        "name": "AC-4: submit whitespace-only title",
+        "status": "pass",
+        "ms": 51
+      },
+      {
+        "name": "AC-5: submit a valid title",
+        "status": "pass",
+        "ms": 64
+      },
+      {
+        "name": "AC-5: message cleared",
+        "status": "pass",
+        "ms": 2
+      }
+    ],
+    "captures": [
+      {
+        "name": "AC-4-error",
+        "file": "shots/AC-4-error.png"
+      },
+      {
+        "name": "AC-5-cleared",
+        "file": "shots/AC-5-cleared.png"
+      }
+    ],
+    "console_errors": [
+      "Failed to load resource: the server responded with a status of 400 (Bad Request)",
+      "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+    ],
+    "failed_requests": [
+      {
+        "url": "http://127.0.0.1:4319/api/tasks",
+        "status": 400
+      },
+      {
+        "url": "http://127.0.0.1:4319/api/tasks",
+        "status": 400
+      }
+    ],
+    "video": "video/blank-title.webm",
+    "warnings": []
+  },
+  "create-task": {
+    "flow": "create-task",
+    "ok": true,
+    "viewport": {
+      "width": 1280,
+      "height": 800
+    },
+    "steps": [
+      {
+        "name": "open board",
+        "status": "pass",
+        "ms": 44
+      },
+      {
+        "name": "count tasks",
+        "status": "pass",
+        "ms": 3
+      },
+      {
+        "name": "add task",
+        "status": "pass",
+        "ms": 81
+      },
+      {
+        "name": "list grew by one",
+        "status": "pass",
+        "ms": 4
+      }
+    ],
+    "captures": [
+      {
+        "name": "landing",
+        "file": "shots/landing.png"
+      },
+      {
+        "name": "task-added",
+        "file": "shots/task-added.png"
+      }
+    ],
+    "console_errors": [],
+    "failed_requests": [],
+    "video": "video/create-task.webm",
+    "warnings": []
+  }
+}
