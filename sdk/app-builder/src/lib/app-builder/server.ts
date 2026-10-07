@@ -334,12 +334,18 @@ async function promptProjectNameWithXml(
     }, getProjectNameTimeoutMs())
   })
 
-  const agent = Agent.create({
-    apiKey,
-    model: { id: process.env.CURSOR_PROJECT_NAME_MODEL ?? "composer-2" },
-  })
+  // Agent.create() is async since @cursor/sdk 1.0.x; race it against the
+  // same deadline as the run so a slow create cannot stall name generation.
+  let agent: SDKAgent | undefined
 
   try {
+    agent = await Promise.race([
+      Agent.create({
+        apiKey,
+        model: { id: process.env.CURSOR_PROJECT_NAME_MODEL ?? "composer-2" },
+      }),
+      timeoutPromise,
+    ])
     const run = await agent.send(buildProjectNamePrompt(context))
 
     return await Promise.race([
@@ -350,7 +356,7 @@ async function promptProjectNameWithXml(
     if (timeout) {
       clearTimeout(timeout)
     }
-    agent.close()
+    agent?.close()
   }
 }
 
@@ -1002,11 +1008,10 @@ async function getOrCreateAgent(session: BuilderSession) {
   session.agent = await Agent.create({
     apiKey: session.apiKey,
     model: { id: process.env.CURSOR_MODEL ?? "composer-2" },
+    // BROWSER=none is set on the preview host's Vite spawn (see runCommand);
+    // LocalAgentOptions has no envVars field, that is a cloud-only option.
     local: {
       cwd: session.projectPath,
-      envVars: {
-        BROWSER: "none",
-      },
     },
   })
 

@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.4.1",
-    "@cursor/sdk": "^1.0.7",
+    "@cursor/sdk": "^1.0.36",
     "@phosphor-icons/react": "^2.1.10",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
