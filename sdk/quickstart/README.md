@@ -18,6 +18,8 @@ Set a Cursor API key:
 export CURSOR_API_KEY="crsr_..."
 ```
 
+The example uses `composer-2`; set `CURSOR_MODEL` to run it with another model id.
+
 Run the quickstart:
 
 ```bash

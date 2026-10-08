@@ -21,3 +21,4 @@ for await (const event of run.stream()) {
 }
 
 await run.wait()
+agent.close()
