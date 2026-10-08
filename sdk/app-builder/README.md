@@ -23,6 +23,12 @@ Open [http://localhost:3000](http://localhost:3000).
 
 On first launch, paste a Cursor API key. The app stores it locally in `~/.app-builder/settings.json` and uses it to create local agent sessions.
 
+Optional environment variables:
+
+- `CURSOR_MODEL`: model id for the builder sessions (default `composer-2`).
+- `CURSOR_PROJECT_NAME_MODEL`: model id used to generate project names (default `composer-2`).
+- `CURSOR_PROJECT_NAME_TIMEOUT_MS`: timeout for project-name generation in milliseconds (default `15000`).
+
 ## Notes
 
 This app is intended as a local Cursor SDK demo. Do not deploy it as a shared public service without adding authentication, per-user storage, and stronger secret handling.
