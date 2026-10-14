@@ -222,4 +222,4 @@ set -a && source .env && set +a
 
 - DAG schema example: `examples/example_dag.json` (sibling of this skill after install)
 - Runner entry point after install: `run_dag.ts` inside `$RUNNER_DIR`
-- Cursor SDK docs: https://cursor.com/docs/api/sdk/typescript
+- Cursor SDK docs: https://cursor.com/docs/sdk/typescript
