@@ -1,0 +1,24 @@
+{
+  "purpose": "A virtual uv workspace root with two members and one root uv.lock. Each member is its own component. One frozen install syncs every member with the dev group and the PEP 735 test group one member defines, and each member's tests run from its folder with the root .venv. Both reach Level 2.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 2,
+      "levels": {
+        "calendar-rules": 2,
+        "pricing": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:calendar-rules",
+      "noBlocker": true,
+      "safety": "pass",
+      "outcome": "proven",
+      "contract": {
+        "cmd-repo-install": "uv sync --frozen --all-packages --group test",
+        "cmd-pricing-test": "../../.venv/bin/python -m unittest discover -s tests -t ."
+      }
+    }
+  ]
+}

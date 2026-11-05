@@ -1,0 +1,18 @@
+{
+  "purpose": "No blockers: the report should say so and recommend starting to delegate.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 2,
+      "levels": {
+        "healthy-node": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:healthy-node",
+      "noBlocker": true,
+      "safety": "pass"
+    }
+  ]
+}

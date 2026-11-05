@@ -1,0 +1,25 @@
+{
+  "name": "agent-readiness",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.14.0"
+  },
+  "scripts": {
+    "readiness": "node --experimental-strip-types --no-warnings skill/agent-readiness/scripts/readiness.ts",
+    "typecheck": "tsc -p .",
+    "test": "node --experimental-strip-types --no-warnings --test tests/*.test.ts",
+    "check": "npm run typecheck && npm test",
+    "sample": "node --experimental-strip-types --no-warnings support/tools/generate-sample.ts",
+    "release-manifest": "node --experimental-strip-types --no-warnings support/tools/release-manifest.ts",
+    "evals": "node --experimental-strip-types --no-warnings support/evals/run.ts",
+    "goldens": "node --experimental-strip-types --no-warnings support/evals/goldens.ts",
+    "labels": "node --experimental-strip-types --no-warnings support/evals/labels/check.ts"
+  },
+  "devDependencies": {
+    "@cursor/sdk": "1.2.0",
+    "@types/node": "22.13.0",
+    "typescript": "5.9.3"
+  }
+}

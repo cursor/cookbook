@@ -1,0 +1,148 @@
+{
+  "schema": "agent-readiness/goldens@1",
+  "rank": [
+    [
+      "slugify:slugify",
+      "starlette:starlette"
+    ],
+    [
+      "express:express"
+    ],
+    [
+      "create-t3-turbo:nextjs",
+      "create-t3-turbo:ui"
+    ]
+  ],
+  "goldens": [
+    {
+      "id": "slugify",
+      "repo": "sindresorhus/slugify",
+      "sha": "3b17b2e84b97624a683aafaa38184bf2746fab22",
+      "license": "MIT",
+      "toolchains": [
+        "js-ts"
+      ],
+      "shape": "single",
+      "reason": "A small, well-tested npm package with no services and no secrets: the high end.",
+      "expect": {
+        "included": [
+          "slugify"
+        ],
+        "excluded": [],
+        "levels": {
+          "slugify": 2
+        }
+      }
+    },
+    {
+      "id": "express",
+      "repo": "expressjs/express",
+      "sha": "1c6f1b0fe4000977b9a7b4f34097e4d527dd9824",
+      "license": "MIT",
+      "toolchains": [
+        "js-ts"
+      ],
+      "shape": "single",
+      "reason": "A widely used npm package with lint and a large test suite, and docs that go stale: the middle.",
+      "expect": {
+        "included": [
+          "express"
+        ],
+        "excluded": [],
+        "levels": {
+          "express": 1
+        }
+      }
+    },
+    {
+      "id": "starlette",
+      "repo": "encode/starlette",
+      "sha": "2745bbc5afa2f8ce900d290bedca2bc5d3f3cfe8",
+      "license": "BSD-3-Clause",
+      "toolchains": [
+        "python"
+      ],
+      "shape": "single",
+      "reason": "A Python library that installs with uv from a lockfile and tests with pytest: the Python case.",
+      "expect": {
+        "included": [
+          "starlette"
+        ],
+        "excluded": [],
+        "levels": {
+          "starlette": 2
+        }
+      }
+    },
+    {
+      "id": "create-t3-turbo",
+      "repo": "t3-oss/create-t3-turbo",
+      "sha": "8f945b7bb3bfb3ca8358d48b1ff0214079bc11ee",
+      "license": "MIT",
+      "toolchains": [
+        "js-ts"
+      ],
+      "shape": "monorepo",
+      "reason": "A pnpm and Turborepo monorepo with nested apps (Expo, Next.js, TanStack Start) and shared packages, plus config packages under tooling/ that must be satellites: the monorepo with nested apps, and the low end, since none of its apps has a test command.",
+      "expect": {
+        "included": [
+          "expo",
+          "nextjs",
+          "tanstack-start",
+          "auth",
+          "db",
+          "ui"
+        ],
+        "excluded": [],
+        "levels": {
+          "expo": 0,
+          "nextjs": 0,
+          "tanstack-start": 0,
+          "auth": 0,
+          "db": 0,
+          "ui": 0
+        }
+      }
+    },
+    {
+      "id": "uuid",
+      "repo": "google/uuid",
+      "sha": "2d3c2a9cc518326daf99a383f07c4d3c44317e4d",
+      "license": "BSD-3-Clause",
+      "toolchains": [
+        "go"
+      ],
+      "shape": "single",
+      "reason": "A Go module: the audit must list it as not assessed with its toolchain, give no level and claim nothing it didn't find.",
+      "expect": {
+        "included": [],
+        "excluded": [
+          {
+            "id": "uuid",
+            "toolchain": "Go"
+          }
+        ]
+      }
+    },
+    {
+      "id": "serilog",
+      "repo": "serilog/serilog",
+      "sha": "43105b35095337d77f022561a8f2d3db2f9a7937",
+      "license": "Apache-2.0",
+      "toolchains": [
+        "dotnet"
+      ],
+      "shape": "single",
+      "reason": "A .NET solution with source and test projects: not assessed, listed under its solution, with no level.",
+      "expect": {
+        "included": [],
+        "excluded": [
+          {
+            "id": "Serilog",
+            "toolchain": ".NET"
+          }
+        ]
+      }
+    }
+  ]
+}

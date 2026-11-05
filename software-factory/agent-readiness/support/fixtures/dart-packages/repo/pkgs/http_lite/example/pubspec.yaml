@@ -1,0 +1,4 @@
+name: http_lite_example
+publish_to: none
+environment:
+  sdk: ^3.5.0

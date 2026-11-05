@@ -1,0 +1,744 @@
+{
+  "version": "2026-10-alpha",
+  "scale": [
+    {
+      "level": 0,
+      "name": "Not bootable",
+      "plain": "not bootable",
+      "meaning": "A clean checkout can't install, build and pass its tests.",
+      "measuredBy": "audit"
+    },
+    {
+      "level": 1,
+      "name": "Bootable",
+      "plain": "bootable",
+      "meaning": "A clean checkout installs, builds and passes every test.",
+      "measuredBy": "audit"
+    },
+    {
+      "level": 2,
+      "name": "Verifiable",
+      "plain": "verifiable",
+      "meaning": "Agents can check their own work: the commands pass, the tests catch planted faults, the instructions are accurate and normal work needs no production access.",
+      "measuredBy": "audit"
+    },
+    {
+      "level": 3,
+      "name": "Delegable",
+      "plain": "delegable",
+      "meaning": "Agent PRs meet the outcome targets your team set.",
+      "measuredBy": "outcomes"
+    },
+    {
+      "level": 4,
+      "name": "Scalable",
+      "plain": "scalable",
+      "meaning": "Those targets held while agent PR volume at least doubled.",
+      "measuredBy": "outcomes"
+    }
+  ],
+  "strengths": [
+    "asserted",
+    "static",
+    "executed",
+    "clean_replay",
+    "outcome_validated"
+  ],
+  "strengthLabels": {
+    "asserted": "stated in docs",
+    "static": "read from files",
+    "executed": "ran on host",
+    "clean_replay": "ran in a clean container",
+    "outcome_validated": "confirmed by outcomes"
+  },
+  "checks": [
+    {
+      "id": "scope.profile",
+      "title": "Components and where changes land",
+      "scope": "repo",
+      "informational": true,
+      "why": "Levels follow the work, so the audit finds each package and its share of recent changes.",
+      "sources": []
+    },
+    {
+      "id": "scope.agent_assets",
+      "title": "Agent assets in the repo",
+      "scope": "repo",
+      "informational": true,
+      "why": "Shows what agent setup already exists and who maintains it. Not scored.",
+      "sources": []
+    },
+    {
+      "id": "bootstrap.cold_replay",
+      "title": "Setup works from a clean checkout",
+      "scope": "component",
+      "minStrengthForPass": "clean_replay",
+      "why": "Every agent starts from a clean checkout, so setup that only works on a prepared machine breaks every agent run.",
+      "sources": [
+        {
+          "claim": "In the BootstrapAgent study, a reusable, verified setup cut later agents' token use by 25.9% and build time by 22.3%.",
+          "caveat": "Measured on the study's benchmark repositories.",
+          "url": "https://arxiv.org/abs/2605.15815"
+        }
+      ]
+    },
+    {
+      "id": "verify.canonical_interface",
+      "title": "Build, lint, type-check and test commands pass",
+      "scope": "component",
+      "minStrengthForPass": "executed",
+      "why": "Agents need one known way to check their own work.",
+      "sources": []
+    },
+    {
+      "id": "verify.behavioral_oracle",
+      "title": "Tests catch planted faults",
+      "scope": "component",
+      "minStrengthForPass": "executed",
+      "why": "Green tests aren't proof that a change is right.",
+      "sources": [
+        {
+          "claim": "OpenAI estimated about 30% of SWE-Bench Pro's 731 public tasks were broken, including low-coverage tests that let incomplete fixes pass.",
+          "caveat": "An audit of one benchmark, not of customer repositories.",
+          "url": "https://openai.com/index/separating-signal-from-noise-coding-evaluations"
+        }
+      ]
+    },
+    {
+      "id": "context.instructions_verified",
+      "title": "Agent instructions are accurate",
+      "scope": "repo",
+      "minStrengthForPass": "executed",
+      "why": "Agents follow AGENTS.md, rules and skills literally, so a stale command costs more than a missing one. No outcome study yet measures how much these files help.",
+      "sources": []
+    },
+    {
+      "id": "safety.execution_boundary",
+      "title": "Normal work needs no production access",
+      "scope": "repo",
+      "minStrengthForPass": "static",
+      "why": "Agents run with whatever access setup gives them, so normal work must never need production credentials.",
+      "sources": []
+    }
+  ],
+  "conditions": {
+    "clean.install": {
+      "check": "bootstrap.cold_replay",
+      "scope": "component",
+      "label": "installs from the lockfile in a clean container"
+    },
+    "clean.build": {
+      "check": "bootstrap.cold_replay",
+      "scope": "component",
+      "label": "builds in a clean container"
+    },
+    "clean.test": {
+      "check": "bootstrap.cold_replay",
+      "scope": "component",
+      "label": "passes every test in a clean container"
+    },
+    "commands": {
+      "check": "verify.canonical_interface",
+      "scope": "component",
+      "label": "build, lint, type-check and test commands pass"
+    },
+    "faults": {
+      "check": "verify.behavioral_oracle",
+      "scope": "component",
+      "label": "tests catch planted faults"
+    },
+    "instructions": {
+      "check": "context.instructions_verified",
+      "scope": "repo",
+      "label": "agent instructions are accurate"
+    },
+    "safety": {
+      "check": "safety.execution_boundary",
+      "scope": "repo",
+      "label": "normal work needs no production access"
+    },
+    "toolchain": {
+      "check": "bootstrap.cold_replay",
+      "scope": "repo",
+      "label": "toolchain versions are pinned"
+    },
+    "lockfile": {
+      "check": "bootstrap.cold_replay",
+      "scope": "repo",
+      "label": "a frozen install reproduces the lockfile"
+    }
+  },
+  "level1": [
+    "clean.install",
+    "clean.build",
+    "clean.test"
+  ],
+  "level2": [
+    "commands",
+    "faults",
+    "instructions",
+    "safety"
+  ],
+  "scenarios": [
+    {
+      "id": "first_pr",
+      "label": "First PR",
+      "level2": [
+        "commands",
+        "instructions",
+        "safety"
+      ]
+    },
+    {
+      "id": "bug_fixes",
+      "label": "Bug fixes",
+      "level2": [
+        "commands",
+        "faults",
+        "safety"
+      ]
+    },
+    {
+      "id": "features",
+      "label": "Features and refactors",
+      "level2": [
+        "commands",
+        "faults",
+        "safety",
+        "instructions"
+      ]
+    },
+    {
+      "id": "repo_wide",
+      "label": "Repo-wide changes",
+      "level2": [
+        "commands",
+        "faults",
+        "safety",
+        "toolchain",
+        "lockfile"
+      ]
+    }
+  ],
+  "level3": {
+    "minAgentPRs": 20,
+    "absoluteMinAgentPRs": 10,
+    "windowDays": 30
+  },
+  "level4": {
+    "consecutiveWindows": 2,
+    "volumeMultiplier": 2
+  },
+  "components": {
+    "maxAssessed": 6,
+    "historyDays": 90,
+    "botAuthorPatterns": [
+      "[bot]",
+      "dependabot",
+      "renovate",
+      "github-actions"
+    ],
+    "generatedPatterns": [
+      "dist/",
+      "build/",
+      "coverage/",
+      ".min.js",
+      ".generated.",
+      "__generated__/"
+    ],
+    "lockfiles": [
+      "package-lock.json",
+      "pnpm-lock.yaml",
+      "yarn.lock",
+      "uv.lock",
+      "poetry.lock",
+      "Pipfile.lock"
+    ]
+  },
+  "repoLevel": {
+    "activeShare": 0.1,
+    "hysteresisAudits": 2,
+    "partialCoverageShare": 0.2,
+    "rule": "the lowest level among active components, the assessed components with at least 10% of changes over 90 days; a component joins or leaves that set only after two audits on the same side of the line, and components the audit can't assess never set it"
+  },
+  "mutation": {
+    "perComponent": 5,
+    "minForPass": 3,
+    "languages": [
+      "ts",
+      "js",
+      "py"
+    ],
+    "operators": [
+      "boundary_flip",
+      "negate_condition",
+      "shift_by_one",
+      "swap_return",
+      "drop_throw_or_return",
+      "change_constant"
+    ],
+    "runTimeoutSec": 300,
+    "flakeRuns": 2,
+    "targeting": "files imported by the component's tests, most recently changed first"
+  },
+  "budgets": {
+    "commandTimeoutSec": 600,
+    "componentMinutes": 15,
+    "totalMinutes": 60
+  },
+  "outcomes": {
+    "windowDays": 30,
+    "minRateN": 5,
+    "defaultFilter": {
+      "branchPrefixes": [
+        "cursor/"
+      ],
+      "labels": [],
+      "authors": [],
+      "coAuthorTrailers": []
+    },
+    "metrics": [
+      "opened",
+      "merged",
+      "first_time_ci_pass",
+      "changes_requested",
+      "median_days_to_merge",
+      "prs_adding_path",
+      "merged_by_activity_label"
+    ],
+    "activityLabels": {
+      "bug_fixes": [
+        "bug",
+        "fix",
+        "bugfix"
+      ],
+      "features": [
+        "feature",
+        "enhancement",
+        "refactor"
+      ]
+    }
+  },
+  "part1": {
+    "maxHeadlineWords": 40,
+    "maxGaps": 3,
+    "maxGapWords": 22,
+    "bannedTerms": [
+      "first-push",
+      "oracle",
+      "replay",
+      "bootstrap",
+      "canonical",
+      "clean_replay",
+      "mutant",
+      "mutation",
+      "seal",
+      "evidence id",
+      "CI parity",
+      "trajectory"
+    ],
+    "levelNames": [
+      "Not bootable",
+      "Bootable",
+      "Verifiable",
+      "Delegable",
+      "Scalable"
+    ]
+  },
+  "effortX": {
+    "small": 0.2,
+    "medium": 0.55,
+    "large": 0.85
+  },
+  "matrixQuadrants": [
+    "Do first",
+    "Big unlocks",
+    "Quick fills",
+    "Later"
+  ],
+  "templates": {
+    "owner": {
+      "title": "Name an owner for agent readiness",
+      "kind": "decision",
+      "effort": "small",
+      "size": "Small: one decision",
+      "ownerRole": "Engineering lead",
+      "decision": "Who owns agent readiness for this repo",
+      "why": "Someone has to approve setup changes, set outcome targets and watch the weekly recheck.",
+      "doneWhen": "An owner is recorded with `readiness roadmap owner`.",
+      "steps": [
+        {
+          "title": "Pick an owner",
+          "detail": "A person or team who approves setup changes and sets outcome targets."
+        },
+        {
+          "title": "Record it",
+          "detail": "`readiness roadmap owner \"<team or role>\"` stores it in `.agent-readiness/roadmap.json`."
+        }
+      ]
+    },
+    "clean.install": {
+      "title": "Make {component} install from the lockfile in a clean container",
+      "effort": "small",
+      "size": "Small: install setup only",
+      "ownerRole": "Repo maintainer",
+      "why": "In a clean container, the frozen install for {component} fails: {diagnosis}.",
+      "doneWhen": "`readiness replay --component {component}` installs without errors.",
+      "steps": [
+        {
+          "title": "Reproduce it",
+          "detail": "Run `readiness replay --component {component}` and read the install output in the evidence log."
+        },
+        {
+          "title": "Fix the install",
+          "detail": "Commit the lockfile, declare missing system packages in the setup script, or pass registry variables with `--registry-env`."
+        },
+        {
+          "title": "Prove it",
+          "detail": "Rerun `readiness replay --component {component}`."
+        }
+      ]
+    },
+    "clean.build": {
+      "title": "Make {component} build in a clean container",
+      "effort": "small",
+      "size": "Small: build setup only",
+      "ownerRole": "Repo maintainer",
+      "why": "In a clean container, the build for {component} fails: {diagnosis}.",
+      "doneWhen": "`readiness replay --component {component}` builds without errors.",
+      "steps": [
+        {
+          "title": "Reproduce it",
+          "detail": "Run `readiness replay --component {component}` and read the build output."
+        },
+        {
+          "title": "Fix the build",
+          "detail": "Usually a missing generated file, tool or environment variable that a prepared machine already has."
+        },
+        {
+          "title": "Prove it",
+          "detail": "Rerun `readiness replay --component {component}`."
+        }
+      ]
+    },
+    "clean.test:service": {
+      "title": "Set up {service} for agents in {component}",
+      "effort": "small",
+      "size": "Small: setup scripts and environment config, no source changes",
+      "ownerRole": "Repo maintainer",
+      "decision": "Approve committing the setup files",
+      "why": "In a clean container, {component}'s tests fail because nothing starts {service}: {diagnosis}.",
+      "doneWhen": "`readiness replay --component {component}` passes every test.",
+      "steps": [
+        {
+          "title": "Ask the agent to fix it",
+          "detail": "Say \"fix the primary blocker\". It drafts install and start scripts and a `.cursor/environment.json` with `readiness draft-env`."
+        },
+        {
+          "title": "The agent proves it",
+          "detail": "`readiness replay --component {component}` must pass every test before the fix is offered."
+        },
+        {
+          "title": "Review and merge",
+          "detail": "Check that the start script only starts local services and names no production URLs."
+        },
+        {
+          "title": "Point Cloud Agents at it",
+          "detail": "A team admin sets the Cloud Agent environment to read `.cursor/environment.json`; committing the file alone changes no environment."
+        },
+        {
+          "title": "Re-audit",
+          "detail": "The next audit confirms Level 1 and can now plant faults in {component}."
+        }
+      ]
+    },
+    "clean.test:credential": {
+      "title": "Remove the production credential from {component}'s tests",
+      "effort": "medium",
+      "size": "Medium: test setup in {component}",
+      "ownerRole": "Repo maintainer",
+      "decision": "Which fake or sandbox value tests should use",
+      "why": "{component}'s tests fail without a production credential: {diagnosis}.",
+      "doneWhen": "`readiness replay --component {component}` passes every test with no credentials provided.",
+      "steps": [
+        {
+          "title": "Find the read",
+          "detail": "Look for the environment variable named in the test failure."
+        },
+        {
+          "title": "Use a test double",
+          "detail": "Fake the client in tests, or read a sandbox value from a checked-in test config."
+        },
+        {
+          "title": "Prove it",
+          "detail": "Rerun `readiness replay --component {component}` with no credentials set."
+        }
+      ]
+    },
+    "clean.test:missing": {
+      "title": "Add tests and a test command to {component}",
+      "effort": "medium",
+      "size": "Medium: a test runner and first tests in {component}",
+      "ownerRole": "Component owner",
+      "decision": "Which behavior the first tests should pin down",
+      "why": "{component} has no test command, so neither agents nor reviewers can check a change automatically.",
+      "doneWhen": "`readiness replay --component {component}` runs the new tests and they pass.",
+      "researchCheck": "verify.behavioral_oracle",
+      "steps": [
+        {
+          "title": "Pick a runner the repo can install",
+          "detail": "For example `node --test`, Vitest or pytest, added as the `test` script."
+        },
+        {
+          "title": "Test the most changed code first",
+          "detail": "Assert results and edge cases for the files that change most often."
+        },
+        {
+          "title": "Prove it",
+          "detail": "Run a new audit. It runs the tests in a clean container and plants faults they should catch."
+        }
+      ]
+    },
+    "clean.test": {
+      "title": "Make {component}'s tests pass from a clean checkout",
+      "effort": "medium",
+      "size": "Medium: test setup in {component}",
+      "ownerRole": "Repo maintainer",
+      "why": "In a clean container, {component}'s tests fail: {diagnosis}.",
+      "doneWhen": "`readiness replay --component {component}` passes every test.",
+      "steps": [
+        {
+          "title": "Reproduce it",
+          "detail": "Run `readiness replay --component {component}` and read the failing test output."
+        },
+        {
+          "title": "Fix what a prepared machine was hiding",
+          "detail": "Usually a missing service, tool, fixture file or environment variable."
+        },
+        {
+          "title": "Prove it",
+          "detail": "Rerun `readiness replay --component {component}`."
+        }
+      ]
+    },
+    "commands": {
+      "title": "Fix the failing {kinds} command in {component}",
+      "effort": "small",
+      "size": "Small: one command in {component}",
+      "ownerRole": "Repo maintainer",
+      "why": "The {kinds} command for {component} fails at HEAD: {diagnosis}.",
+      "doneWhen": "`readiness run --component {component}` passes every discovered command.",
+      "steps": [
+        {
+          "title": "Reproduce it",
+          "detail": "Run `readiness run --component {component}` and read the failing command's output."
+        },
+        {
+          "title": "Fix it at HEAD",
+          "detail": "Agents rely on these commands to check their own work, so they must pass on a clean main branch."
+        },
+        {
+          "title": "Prove it",
+          "detail": "Rerun `readiness run --component {component}`."
+        }
+      ]
+    },
+    "faults": {
+      "title": "Make {component}'s tests catch wrong behavior",
+      "effort": "medium",
+      "size": "Medium: tests in {component} only",
+      "ownerRole": "Component owner",
+      "decision": "What the untested behavior in {files} should be",
+      "why": "The audit planted {planted} faults in {component} in a throwaway copy, and the tests caught {caught}.",
+      "doneWhen": "A new audit's fresh planted faults in {component} are all caught.",
+      "steps": [
+        {
+          "title": "Decide the intended behavior",
+          "detail": "For the files named here, write down what correct behavior is, including edge cases."
+        },
+        {
+          "title": "Write tests that pin it down",
+          "detail": "Assert results and edge cases, not just that code runs."
+        },
+        {
+          "title": "Prove it with fresh faults",
+          "detail": "Run a new audit. It plants different faults than this one, so tests aimed at one audit's faults don't help."
+        },
+        {
+          "title": "Review",
+          "detail": "`readiness diff` flags any deleted test or new skip marker, so nothing was weakened to pass."
+        }
+      ]
+    },
+    "instructions": {
+      "title": "Fix the stale agent instructions",
+      "effort": "small",
+      "size": "Small: {fileCount} instruction files",
+      "ownerRole": "Repo maintainer",
+      "why": "{failedCount} instructions agents would follow are wrong: {diagnosis}.",
+      "doneWhen": "`readiness run --instructions` replays every instruction item.",
+      "steps": [
+        {
+          "title": "Fix each listed item",
+          "detail": "{itemList}"
+        },
+        {
+          "title": "Prove it",
+          "detail": "`readiness run --instructions` replays every command and checks every path."
+        }
+      ]
+    },
+    "safety:secret": {
+      "title": "Remove committed secrets",
+      "effort": "small",
+      "size": "Small: {fileCount} files, plus rotating the secrets",
+      "ownerRole": "Security owner",
+      "decision": "Rotate the exposed secrets",
+      "why": "The repo contains {count} committed secrets ({types}); agents and their logs can read them.",
+      "doneWhen": "`readiness scan` reports no committed secrets.",
+      "steps": [
+        {
+          "title": "Rotate first",
+          "detail": "Treat every listed secret as exposed and rotate it before removing it."
+        },
+        {
+          "title": "Remove and ignore",
+          "detail": "Move values to the secret store and add the files to `.gitignore`."
+        },
+        {
+          "title": "Prove it",
+          "detail": "Rerun `readiness scan`."
+        }
+      ]
+    },
+    "safety:hook": {
+      "title": "Remove the network-piped install hook",
+      "effort": "small",
+      "size": "Small: package scripts",
+      "ownerRole": "Security owner",
+      "decision": "Whether the hook's script can be vendored and reviewed",
+      "why": "An install hook downloads and runs a script ({detail}); every agent install would run it unreviewed.",
+      "doneWhen": "`readiness scan` reports no network-piped hooks.",
+      "steps": [
+        {
+          "title": "Vendor or delete the script",
+          "detail": "Commit the script it downloads, reviewed, or remove the hook."
+        },
+        {
+          "title": "Prove it",
+          "detail": "Rerun `readiness scan`."
+        }
+      ]
+    },
+    "safety:credential": {
+      "title": "Stop normal work from needing production credentials",
+      "effort": "medium",
+      "size": "Medium: test and build setup",
+      "ownerRole": "Security owner",
+      "decision": "Which sandbox credentials agents may use",
+      "why": "Normal build or test commands read production credentials ({detail}).",
+      "doneWhen": "`readiness scan` reports no production credential reads in normal work.",
+      "steps": [
+        {
+          "title": "Replace with sandbox values",
+          "detail": "Tests and builds use fakes or sandbox accounts."
+        },
+        {
+          "title": "Prove it",
+          "detail": "Rerun `readiness scan` and `readiness replay`."
+        }
+      ]
+    },
+    "toolchain": {
+      "title": "Pin the toolchain versions",
+      "effort": "small",
+      "size": "Small: one or two version files",
+      "ownerRole": "Repo maintainer",
+      "why": "The repo doesn't pin {missing}, so agents and CI can build with different versions.",
+      "doneWhen": "`readiness scan` finds the pins.",
+      "steps": [
+        {
+          "title": "Add the pins",
+          "detail": "{advice}"
+        },
+        {
+          "title": "Prove it",
+          "detail": "Rerun `readiness scan` and `readiness replay`."
+        }
+      ]
+    },
+    "lockfile": {
+      "title": "Make the install reproducible from a lockfile",
+      "effort": "small",
+      "size": "Small: lockfile and install command",
+      "ownerRole": "Repo maintainer",
+      "why": "A frozen install doesn't reproduce exact dependencies: {diagnosis}.",
+      "doneWhen": "`readiness replay` reports a frozen install with the lockfile unchanged.",
+      "steps": [
+        {
+          "title": "Commit a lockfile",
+          "detail": "{advice}"
+        },
+        {
+          "title": "Prove it",
+          "detail": "Rerun `readiness replay`."
+        }
+      ]
+    },
+    "delegate": {
+      "title": "Give agents work in {component}",
+      "kind": "rollout",
+      "effort": "small",
+      "size": "Small: pick the work",
+      "ownerRole": "Component owner",
+      "decision": "Which tasks go to agents first, and who reviews them",
+      "why": "{component} is already at Level 2, so agents can check their own work there.",
+      "doneWhen": "Agent PRs in {component} appear in the outcome numbers.",
+      "steps": [
+        {
+          "title": "Pick 3 to 5 real tasks",
+          "detail": "Well-scoped tasks that touch only {component}."
+        },
+        {
+          "title": "Hand them to agents",
+          "detail": "Agents run the verify skill before they push."
+        },
+        {
+          "title": "Review as usual",
+          "detail": "The next audit counts these PRs by component."
+        }
+      ]
+    },
+    "targets": {
+      "title": "Set your Level 3 targets",
+      "kind": "decision",
+      "effort": "small",
+      "size": "Small: one decision",
+      "ownerRole": "Engineering lead",
+      "decision": "The merge rate, first-time CI pass rate and review load that mean agents handle work here",
+      "why": "Level 3 is measured against targets your team sets, and none are recorded yet.",
+      "doneWhen": "Targets are recorded with `readiness roadmap targets`.",
+      "steps": [
+        {
+          "title": "Agree the measures",
+          "detail": "Merge rate, first-time CI pass rate and reviewer change requests, over at least 20 agent PRs."
+        },
+        {
+          "title": "Record them",
+          "detail": "`readiness roadmap targets --merge-rate 0.7 --first-pass 0.6 --max-changes-requested 0.3`."
+        },
+        {
+          "title": "Read the next report",
+          "detail": "It shows the distance to each target."
+        }
+      ]
+    }
+  },
+  "notAssessed": [
+    "Whether CI matches the local commands",
+    "Flaky tests",
+    "The quality of error messages",
+    "How easily code can be found",
+    "Outcome checks on held-out tasks"
+  ]
+}

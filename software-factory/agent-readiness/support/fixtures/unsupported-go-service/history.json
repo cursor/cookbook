@@ -1,0 +1,18 @@
+{
+  "commits": [
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 40,
+      "paths": ["inventory/notes/n1.md", "inventory/notes/n2.md", "inventory/notes/n3.md"],
+      "message": "Update inventory"
+    },
+    {
+      "author": "Contributor B",
+      "email": "b@example.com",
+      "daysAgo": 12,
+      "paths": ["inventory/notes/n4.md", "notes/n5.md"],
+      "message": "Update inventory and notes"
+    }
+  ]
+}

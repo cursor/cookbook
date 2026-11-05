@@ -1,0 +1,23 @@
+{
+  "purpose": "A Bun project with bun.lock, a local file: dependency so the lockfile isn't empty, and bun test. The audit adds the pinned Bun (bun@1.2.19, from npm) to its Node image, runs bun install --frozen-lockfile, and the package reaches Level 2.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 2,
+      "levels": {
+        "bun-lock": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:bun-lock",
+      "noBlocker": true,
+      "safety": "pass",
+      "outcome": "proven",
+      "contract": {
+        "cmd-repo-install": "bun install --frozen-lockfile",
+        "cmd-bun-lock-test": "bun run test"
+      }
+    }
+  ]
+}

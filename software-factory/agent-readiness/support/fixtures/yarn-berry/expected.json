@@ -1,0 +1,39 @@
+{
+  "purpose": "The healthy package on Yarn 4 with Plug'n'Play and a packageManager pin. Corepack downloads Yarn during the install and runs an immutable install, so the package reaches Level 2. Where repo.yarnpkg.com is blocked, the second run points Corepack at the npm registry by name; without it the install is blocked, never a repo failure.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 2,
+      "levels": {
+        "yarn-berry": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:yarn-berry",
+      "noBlocker": true,
+      "safety": "pass",
+      "outcome": "proven",
+      "contract": {
+        "cmd-repo-install": "corepack yarn install --immutable"
+      }
+    },
+    {
+      "name": "with --registry-env COREPACK_NPM_REGISTRY",
+      "level": 2,
+      "levels": {
+        "yarn-berry": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:yarn-berry",
+      "noBlocker": true,
+      "safety": "pass",
+      "registryEnv": {
+        "COREPACK_NPM_REGISTRY": "https://registry.npmjs.org"
+      },
+      "outcome": "proven"
+    }
+  ]
+}

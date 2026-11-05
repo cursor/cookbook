@@ -1,0 +1,38 @@
+{
+  "purpose": "No root package: a pnpm TypeScript app under apps/, a .NET solution whose test project belongs to it, a second .NET service, and a load-test package under bench/. The app must be found with its own pnpm install and its nested lint, type-check, build and test scripts; each .NET part listed as not assessed with its share of changes; and the bench package listed as a satellite, not a component.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 2,
+      "levels": {
+        "checkout-web": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:checkout-web",
+      "noBlocker": true,
+      "safety": "pass",
+      "outcome": "proven",
+      "notAssessed": [
+        "commerce-core",
+        "identity-dev"
+      ],
+      "shares": {
+        "checkout-web": 0.556,
+        "commerce-core": 0.333,
+        "identity-dev": 0.111
+      },
+      "satellites": [
+        "bench/checkout-load"
+      ],
+      "signals": {
+        "ci": false,
+        "targeted_tests": true,
+        "env_sample": null,
+        "isolation": true,
+        "agents_md_length": null
+      }
+    }
+  ]
+}

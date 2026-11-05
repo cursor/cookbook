@@ -1,0 +1,315 @@
+{
+  "commits": [
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 85,
+      "paths": [
+        "packages/api/notes/n1.md",
+        "packages/api/notes/n2.md",
+        "packages/api/notes/n3.md",
+        "packages/api/notes/n4.md",
+        "packages/api/notes/n5.md",
+        "packages/api/notes/n6.md",
+        "packages/api/notes/n7.md"
+      ],
+      "message": "Update api"
+    },
+    {
+      "author": "Contributor B",
+      "email": "b@example.com",
+      "daysAgo": 81,
+      "paths": [
+        "packages/worker/notes/n1.md",
+        "packages/worker/notes/n2.md",
+        "packages/worker/notes/n3.md"
+      ],
+      "message": "Update worker"
+    },
+    {
+      "author": "Contributor C",
+      "email": "c@example.com",
+      "daysAgo": 77,
+      "paths": [
+        "packages/shared/notes/n1.md",
+        "packages/shared/notes/n2.md",
+        "packages/shared/notes/n3.md"
+      ],
+      "message": "Update shared"
+    },
+    {
+      "author": "Contributor D",
+      "email": "d@example.com",
+      "daysAgo": 74,
+      "paths": [
+        "infra/notes/n1.md",
+        "infra/notes/n2.md"
+      ],
+      "message": "Update infra"
+    },
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 70,
+      "paths": [
+        "packages/worker/notes/n1.md",
+        "packages/worker/notes/n2.md",
+        "packages/worker/notes/n3.md"
+      ],
+      "message": "Update worker"
+    },
+    {
+      "author": "Contributor B",
+      "email": "b@example.com",
+      "daysAgo": 66,
+      "paths": [
+        "packages/api/notes/n1.md",
+        "packages/api/notes/n2.md",
+        "packages/api/notes/n3.md",
+        "packages/api/notes/n4.md",
+        "packages/api/notes/n5.md",
+        "packages/api/notes/n6.md",
+        "packages/api/notes/n7.md"
+      ],
+      "message": "Update api"
+    },
+    {
+      "author": "Contributor C",
+      "email": "c@example.com",
+      "daysAgo": 62,
+      "paths": [
+        "packages/shared/notes/n1.md",
+        "packages/shared/notes/n2.md",
+        "packages/shared/notes/n3.md"
+      ],
+      "message": "Update shared"
+    },
+    {
+      "author": "Contributor D",
+      "email": "d@example.com",
+      "daysAgo": 59,
+      "paths": [
+        "packages/worker/notes/n1.md",
+        "packages/worker/notes/n2.md",
+        "packages/worker/notes/n3.md"
+      ],
+      "message": "Update worker"
+    },
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 55,
+      "paths": [
+        "packages/api/notes/n1.md",
+        "packages/api/notes/n2.md",
+        "packages/api/notes/n3.md",
+        "packages/api/notes/n4.md",
+        "packages/api/notes/n5.md",
+        "packages/api/notes/n6.md",
+        "packages/api/notes/n7.md"
+      ],
+      "message": "Update api"
+    },
+    {
+      "author": "Contributor B",
+      "email": "b@example.com",
+      "daysAgo": 51,
+      "paths": [
+        "packages/worker/notes/n1.md",
+        "packages/worker/notes/n2.md",
+        "packages/worker/notes/n3.md"
+      ],
+      "message": "Update worker"
+    },
+    {
+      "author": "Contributor C",
+      "email": "c@example.com",
+      "daysAgo": 47,
+      "paths": [
+        "packages/api/notes/n1.md",
+        "packages/api/notes/n2.md",
+        "packages/api/notes/n3.md",
+        "packages/api/notes/n4.md",
+        "packages/api/notes/n5.md",
+        "packages/api/notes/n6.md",
+        "packages/api/notes/n7.md"
+      ],
+      "message": "Update api"
+    },
+    {
+      "author": "Contributor D",
+      "email": "d@example.com",
+      "daysAgo": 44,
+      "paths": [
+        "packages/shared/notes/n1.md",
+        "packages/shared/notes/n2.md",
+        "packages/shared/notes/n3.md"
+      ],
+      "message": "Update shared"
+    },
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 40,
+      "paths": [
+        "packages/worker/notes/n1.md",
+        "packages/worker/notes/n2.md",
+        "packages/worker/notes/n3.md"
+      ],
+      "message": "Update worker"
+    },
+    {
+      "author": "Contributor C",
+      "email": "c@example.com",
+      "daysAgo": 40,
+      "paths": [
+        ".cursor/skills/release-notes/SKILL.md"
+      ],
+      "message": "Add release notes skill steps"
+    },
+    {
+      "author": "Contributor B",
+      "email": "b@example.com",
+      "daysAgo": 36,
+      "paths": [
+        "packages/api/notes/n1.md",
+        "packages/api/notes/n2.md",
+        "packages/api/notes/n3.md",
+        "packages/api/notes/n4.md",
+        "packages/api/notes/n5.md",
+        "packages/api/notes/n6.md",
+        "packages/api/notes/n7.md"
+      ],
+      "message": "Update api"
+    },
+    {
+      "author": "Contributor C",
+      "email": "c@example.com",
+      "daysAgo": 32,
+      "paths": [
+        "packages/worker/notes/n1.md",
+        "packages/worker/notes/n2.md",
+        "packages/worker/notes/n3.md"
+      ],
+      "message": "Update worker"
+    },
+    {
+      "author": "Contributor B",
+      "email": "b@example.com",
+      "daysAgo": 30,
+      "paths": [
+        "AGENTS.md"
+      ],
+      "message": "Update agent notes"
+    },
+    {
+      "author": "Contributor D",
+      "email": "d@example.com",
+      "daysAgo": 28,
+      "paths": [
+        "packages/shared/notes/n1.md",
+        "packages/shared/notes/n2.md",
+        "packages/shared/notes/n3.md"
+      ],
+      "message": "Update shared"
+    },
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 25,
+      "paths": [
+        "packages/api/notes/n1.md",
+        "packages/api/notes/n2.md",
+        "packages/api/notes/n3.md",
+        "packages/api/notes/n4.md",
+        "packages/api/notes/n5.md",
+        "packages/api/notes/n6.md",
+        "packages/api/notes/n7.md"
+      ],
+      "message": "Update api"
+    },
+    {
+      "author": "Contributor B",
+      "email": "b@example.com",
+      "daysAgo": 21,
+      "paths": [
+        "packages/worker/notes/n1.md",
+        "packages/worker/notes/n2.md",
+        "packages/worker/notes/n3.md"
+      ],
+      "message": "Update worker"
+    },
+    {
+      "author": "Contributor C",
+      "email": "c@example.com",
+      "daysAgo": 17,
+      "paths": [
+        "packages/api/notes/n1.md",
+        "packages/api/notes/n2.md",
+        "packages/api/notes/n3.md",
+        "packages/api/notes/n4.md",
+        "packages/api/notes/n5.md",
+        "packages/api/notes/n6.md",
+        "packages/api/notes/n7.md"
+      ],
+      "message": "Update api"
+    },
+    {
+      "author": "Contributor D",
+      "email": "d@example.com",
+      "daysAgo": 13,
+      "paths": [
+        "packages/worker/notes/n1.md",
+        "packages/worker/notes/n2.md",
+        "packages/worker/notes/n3.md"
+      ],
+      "message": "Update worker"
+    },
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 10,
+      "paths": [
+        "packages/shared/notes/n1.md",
+        "packages/shared/notes/n2.md",
+        "packages/shared/notes/n3.md"
+      ],
+      "message": "Update shared"
+    },
+    {
+      "author": "Contributor B",
+      "email": "b@example.com",
+      "daysAgo": 6,
+      "paths": [
+        "packages/api/notes/n1.md",
+        "packages/api/notes/n2.md",
+        "packages/api/notes/n3.md",
+        "packages/api/notes/n4.md",
+        "packages/api/notes/n5.md",
+        "packages/api/notes/n6.md",
+        "packages/api/notes/n7.md"
+      ],
+      "message": "Update api"
+    },
+    {
+      "author": "dependabot[bot]",
+      "email": "bot@example.com",
+      "daysAgo": 5,
+      "paths": [
+        "packages/api/notes/bot.md"
+      ],
+      "message": "Bump a dependency"
+    },
+    {
+      "author": "Contributor C",
+      "email": "c@example.com",
+      "daysAgo": 2,
+      "paths": [
+        "packages/worker/notes/n1.md",
+        "packages/worker/notes/n2.md",
+        "packages/worker/notes/n3.md"
+      ],
+      "message": "Update worker"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "purpose": "The build script imports a module that no longer exists. The build fails from a clean checkout, so the component is at Level 0 with the build as its top item, and the diagnosis names the missing module in one line.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 0,
+      "levels": {
+        "build-breaks": 0
+      },
+      "top": [
+        "clean.build:build-breaks"
+      ],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass",
+      "outcome": "proven",
+      "diagnosis": "module /work/scripts/banner.mjs is missing"
+    }
+  ]
+}

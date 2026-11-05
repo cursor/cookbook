@@ -1,0 +1,24 @@
+{
+  "commits": [
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 50,
+      "paths": [
+        "packages/app/notes.md",
+        "packages/core/notes.md"
+      ],
+      "message": "Notes"
+    },
+    {
+      "author": "Contributor B",
+      "email": "b@example.com",
+      "daysAgo": 30,
+      "paths": [
+        "packages/app/notes.md",
+        "packages/core/notes.md"
+      ],
+      "message": "More notes"
+    }
+  ]
+}

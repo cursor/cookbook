@@ -1,0 +1,18 @@
+{
+  "purpose": "AGENTS.md names a missing script and a missing path, and a skill calls a missing script.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 1,
+      "levels": {
+        "agents-md-drift": 1
+      },
+      "top": [
+        "instructions:repo"
+      ],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass"
+    }
+  ]
+}

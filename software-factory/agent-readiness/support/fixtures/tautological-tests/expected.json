@@ -1,0 +1,18 @@
+{
+  "purpose": "Tests run and pass but assert nothing, so planted faults survive.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 1,
+      "levels": {
+        "tautological-tests": 1
+      },
+      "top": [
+        "faults:tautological-tests"
+      ],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass"
+    }
+  ]
+}

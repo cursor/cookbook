@@ -1,0 +1,10 @@
+{
+  "name": "worker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "node ../../scripts/lint.mjs src",
+    "test": "node --test"
+  }
+}

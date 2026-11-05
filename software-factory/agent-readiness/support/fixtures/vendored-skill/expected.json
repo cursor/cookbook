@@ -1,0 +1,20 @@
+{
+  "purpose": "A third-party skill is vendored into .agents/skills and copied into .claude/skills. Its commands install packages, ask questions or hold placeholders, and so does one first-party instruction. They are listed as skipped, never replayed or counted as wrong, so the repo still reaches Level 2.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 2,
+      "levels": {
+        "vendored-skill": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:vendored-skill",
+      "noBlocker": true,
+      "safety": "pass",
+      "neverRan": ["ui-kit", "date-fns", "<name>"],
+      "skipped": 6
+    }
+  ]
+}

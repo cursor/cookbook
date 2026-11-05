@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "ui-kit": {
+      "source": "example-ui/skills",
+      "sourceType": "github",
+      "skillPath": "skills/ui-kit/SKILL.md"
+    }
+  }
+}

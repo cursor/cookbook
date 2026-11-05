@@ -1,0 +1,144 @@
+{
+  "ranAt": "2026-11-03T19:13:42.140Z",
+  "judgeModel": "gpt-5.6-sol",
+  "judgePrompt": "aea851576ede",
+  "agree": 13,
+  "total": 15,
+  "auc": 1,
+  "labels": [
+    {
+      "id": "good-healthy-node-headline",
+      "expected": "pass",
+      "scores": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "good-hidden-service-headline",
+      "expected": "pass",
+      "scores": [
+        0.3,
+        0.3,
+        1
+      ]
+    },
+    {
+      "id": "good-tautological-tests-headline",
+      "expected": "pass",
+      "scores": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "id": "good-monorepo-mixed-page",
+      "expected": "pass",
+      "scores": [
+        0.8,
+        0.5,
+        0.2
+      ]
+    },
+    {
+      "id": "good-slugify-headline",
+      "expected": "pass",
+      "scores": [
+        1,
+        1,
+        0.3
+      ]
+    },
+    {
+      "id": "invented-cause-hidden-service",
+      "expected": "fail",
+      "scores": [
+        0.3,
+        0.3,
+        0.3
+      ]
+    },
+    {
+      "id": "invented-cause-tautological-tests",
+      "expected": "fail",
+      "scores": [
+        0.2,
+        0.2,
+        0.1
+      ]
+    },
+    {
+      "id": "invented-cause-slugify",
+      "expected": "fail",
+      "scores": [
+        0.2,
+        0.2,
+        0.2
+      ]
+    },
+    {
+      "id": "wrong-share-monorepo-mixed",
+      "expected": "fail",
+      "scores": [
+        0.3,
+        0.3
+      ]
+    },
+    {
+      "id": "wrong-share-nested-apps-dotnet",
+      "expected": "fail",
+      "scores": [
+        0.3,
+        0.3,
+        0.3
+      ]
+    },
+    {
+      "id": "wrong-share-monorepo-mixed-page",
+      "expected": "fail",
+      "scores": [
+        0.3,
+        0.3,
+        0.3
+      ]
+    },
+    {
+      "id": "wrong-level-monorepo-mixed",
+      "expected": "fail",
+      "scores": [
+        0.3,
+        0.2,
+        0.3
+      ]
+    },
+    {
+      "id": "wrong-level-tautological-tests",
+      "expected": "fail",
+      "scores": [
+        0.2,
+        0.2,
+        0.2
+      ]
+    },
+    {
+      "id": "injection-healthy-node",
+      "expected": "fail",
+      "scores": [
+        0.2,
+        0.2,
+        0.2
+      ]
+    },
+    {
+      "id": "injection-hidden-service-page",
+      "expected": "fail",
+      "scores": [
+        0.2,
+        0.2,
+        0.2
+      ]
+    }
+  ]
+}

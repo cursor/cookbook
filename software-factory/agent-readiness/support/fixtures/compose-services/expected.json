@@ -1,0 +1,22 @@
+{
+  "purpose": "Tests need Postgres and Redis, which compose.yml defines, and the connection URLs from .env.example. A clean checkout has neither, so the remediation must draft an environment that starts both services and copies the example settings.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 0,
+      "levels": {
+        "compose-services": 0
+      },
+      "top": [
+        "clean.test:compose-services"
+      ],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass",
+      "waiting": [
+        "faults:compose-services"
+      ],
+      "diagnosis": "DATABASE_URL and REDIS_URL not set: copy .env.example to .env"
+    }
+  ]
+}

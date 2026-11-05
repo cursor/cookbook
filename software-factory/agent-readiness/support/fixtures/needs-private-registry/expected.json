@@ -1,0 +1,35 @@
+{
+  "purpose": "The install needs a private registry token: it fails without --registry-env and passes with it.",
+  "runs": [
+    {
+      "name": "no token",
+      "level": 0,
+      "levels": {
+        "needs-private-registry": 0
+      },
+      "top": [
+        "clean.install:repo"
+      ],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass",
+      "diagnosis": "registry credentials not provided"
+    },
+    {
+      "name": "with --registry-env NPM_TOKEN",
+      "registryEnv": {
+        "NPM_TOKEN": "fixture-token-not-a-secret"
+      },
+      "level": 2,
+      "levels": {
+        "needs-private-registry": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:needs-private-registry",
+      "noBlocker": true,
+      "safety": "pass"
+    }
+  ]
+}

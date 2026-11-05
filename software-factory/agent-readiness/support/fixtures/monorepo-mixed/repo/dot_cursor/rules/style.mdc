@@ -1,0 +1,6 @@
+---
+description: Code style
+alwaysApply: true
+---
+
+Keep functions small. Lint a package with `npm run lint -w api`.

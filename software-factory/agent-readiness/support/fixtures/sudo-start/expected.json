@@ -1,0 +1,45 @@
+{
+  "purpose": "A healthy app whose declared start command runs sudo, plus a package script that does. The safety check lists both without blocking. The environment setup still counts as a working setup with the sudo command flagged, and with no container runtime the host fallback never runs the sudo command.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 2,
+      "levels": {
+        "booking-api": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:booking-api",
+      "noBlocker": true,
+      "safety": "pass",
+      "outcome": "proven",
+      "listed": [
+        "elevated"
+      ],
+      "assets": {
+        ".cursor/environment.json": true
+      }
+    },
+    {
+      "name": "no container runtime",
+      "runtime": "none",
+      "level": 0,
+      "levels": {
+        "booking-api": 0
+      },
+      "top": [],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass",
+      "outcome": "blocked",
+      "listed": [
+        "elevated"
+      ],
+      "assets": {
+        ".cursor/environment.json": true
+      },
+      "coverage": "Setup commands that use sudo weren't run on this machine\\."
+    }
+  ]
+}

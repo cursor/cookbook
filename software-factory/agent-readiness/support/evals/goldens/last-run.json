@@ -1,0 +1,140 @@
+{
+  "ranAt": "2026-11-03T04:28:34.553Z",
+  "results": [
+    {
+      "id": "slugify",
+      "sha": "3b17b2e84b97624a683aafaa38184bf2746fab22",
+      "scoring": "49f487f90db58eec829ba410bd6725cba5150591e8d541fffbe801b101e715d3",
+      "commit": "3766065149b611e0dad7d632c7c44829304dc389",
+      "minutes": 1.8,
+      "repoLevel": 2,
+      "outcome": "proven",
+      "levels": {
+        "slugify": 2
+      },
+      "excluded": [],
+      "failures": []
+    },
+    {
+      "id": "express",
+      "sha": "1c6f1b0fe4000977b9a7b4f34097e4d527dd9824",
+      "scoring": "49f487f90db58eec829ba410bd6725cba5150591e8d541fffbe801b101e715d3",
+      "commit": "3766065149b611e0dad7d632c7c44829304dc389",
+      "minutes": 10.6,
+      "repoLevel": 1,
+      "outcome": "proven",
+      "levels": {
+        "express": 1
+      },
+      "excluded": [],
+      "failures": []
+    },
+    {
+      "id": "starlette",
+      "sha": "2745bbc5afa2f8ce900d290bedca2bc5d3f3cfe8",
+      "scoring": "49f487f90db58eec829ba410bd6725cba5150591e8d541fffbe801b101e715d3",
+      "commit": "3766065149b611e0dad7d632c7c44829304dc389",
+      "minutes": 4.5,
+      "repoLevel": 2,
+      "outcome": "proven",
+      "levels": {
+        "starlette": 2
+      },
+      "excluded": [],
+      "failures": []
+    },
+    {
+      "id": "create-t3-turbo",
+      "sha": "8f945b7bb3bfb3ca8358d48b1ff0214079bc11ee",
+      "scoring": "49f487f90db58eec829ba410bd6725cba5150591e8d541fffbe801b101e715d3",
+      "commit": "3766065149b611e0dad7d632c7c44829304dc389",
+      "minutes": 7.3,
+      "repoLevel": 0,
+      "outcome": "proven",
+      "levels": {
+        "expo": 0,
+        "nextjs": 0,
+        "tanstack-start": 0,
+        "auth": 0,
+        "db": 0,
+        "ui": 0
+      },
+      "excluded": [
+        {
+          "id": "api",
+          "toolchain": "TypeScript",
+          "reason": "outside the 6 most active components"
+        },
+        {
+          "id": "validators",
+          "toolchain": "TypeScript",
+          "reason": "outside the 6 most active components"
+        },
+        {
+          "id": "eslint",
+          "toolchain": "Node",
+          "reason": "not a component: it sits under tooling/, which usually holds tests, samples or tooling rather than the product"
+        },
+        {
+          "id": "github",
+          "toolchain": "Node",
+          "reason": "not a component: it sits under tooling/, which usually holds tests, samples or tooling rather than the product"
+        },
+        {
+          "id": "prettier",
+          "toolchain": "Node",
+          "reason": "not a component: it sits under tooling/, which usually holds tests, samples or tooling rather than the product"
+        },
+        {
+          "id": "tailwind",
+          "toolchain": "Node",
+          "reason": "not a component: it sits under tooling/, which usually holds tests, samples or tooling rather than the product"
+        },
+        {
+          "id": "typescript",
+          "toolchain": "Node",
+          "reason": "not a component: it sits under tooling/, which usually holds tests, samples or tooling rather than the product"
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "uuid",
+      "sha": "2d3c2a9cc518326daf99a383f07c4d3c44317e4d",
+      "scoring": "49f487f90db58eec829ba410bd6725cba5150591e8d541fffbe801b101e715d3",
+      "commit": "3766065149b611e0dad7d632c7c44829304dc389",
+      "minutes": 0,
+      "repoLevel": null,
+      "outcome": "not_assessed",
+      "levels": {},
+      "excluded": [
+        {
+          "id": "uuid",
+          "toolchain": "Go",
+          "reason": "Go isn't supported yet"
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "serilog",
+      "sha": "43105b35095337d77f022561a8f2d3db2f9a7937",
+      "scoring": "49f487f90db58eec829ba410bd6725cba5150591e8d541fffbe801b101e715d3",
+      "commit": "3766065149b611e0dad7d632c7c44829304dc389",
+      "minutes": 0,
+      "repoLevel": null,
+      "outcome": "not_assessed",
+      "levels": {},
+      "excluded": [
+        {
+          "id": "Serilog",
+          "toolchain": ".NET",
+          "reason": ".NET isn't supported yet"
+        }
+      ],
+      "failures": []
+    }
+  ],
+  "violations": [],
+  "pending": []
+}

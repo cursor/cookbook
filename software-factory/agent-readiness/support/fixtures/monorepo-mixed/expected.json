@@ -1,0 +1,29 @@
+{
+  "purpose": "Three packages at Levels 0, 1 and 2, an unsupported Terraform folder, drifted instructions, and recorded agent PRs including one that touches two components.",
+  "outcomes": "prs.template.json",
+  "runs": [
+    {
+      "name": "default",
+      "level": 0,
+      "levels": {
+        "api": 0,
+        "worker": 1,
+        "shared": 1
+      },
+      "top": [
+        "clean.test:api",
+        "instructions:repo",
+        "faults:worker"
+      ],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass",
+      "notAssessed": [
+        "infra"
+      ],
+      "waiting": [
+        "faults:api"
+      ]
+    }
+  ]
+}

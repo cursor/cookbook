@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "agent-readiness roadmap",
+  "type": "object",
+  "required": ["schema", "owner", "targets", "items", "updatedBy", "updatedAt"],
+  "properties": {
+    "schema": { "const": "agent-readiness/roadmap@1" },
+    "owner": { "type": ["string", "null"] },
+    "targets": {
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["mergeRate", "firstPass", "maxChangesRequested", "minAgentPrs"],
+          "properties": {
+            "mergeRate": { "type": "number", "minimum": 0, "maximum": 1 },
+            "firstPass": { "type": "number", "minimum": 0, "maximum": 1 },
+            "maxChangesRequested": { "type": "number", "minimum": 0, "maximum": 1 },
+            "minAgentPrs": { "type": "integer", "minimum": 10 }
+          }
+        }
+      ]
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "order", "kind", "template", "title", "status", "fixes", "unlocks", "impact", "effort", "size", "ownerRole", "decision", "dependsOn", "why", "doneWhen", "steps", "expected", "evidence", "createdAt", "createdBy", "closedAt", "closedBy", "observed"],
+        "properties": {
+          "status": { "enum": ["done", "in_progress", "next", "start_now", "waiting", "later"] },
+          "kind": { "enum": ["fix", "decision", "rollout"] },
+          "effort": { "enum": ["small", "medium", "large"] },
+          "impact": { "type": "number", "minimum": 0, "maximum": 1 },
+          "expected": {
+            "type": "object",
+            "required": ["outcome", "watch"],
+            "properties": {
+              "watch": { "type": "object", "required": ["metric", "scope", "baseline", "n", "window"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "purpose": "No pinned Python version and unpinned requirements. The standard level doesn't need pins, so the component reaches Level 2; the repo-wide scenario, added for this run, needs them and stays at Level 1.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 2,
+      "levels": {
+        "python-unpinned": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:python-unpinned",
+      "noBlocker": true,
+      "safety": "pass",
+      "scenarios": [
+        "repo_wide"
+      ],
+      "scenarioLevels": {
+        "python-unpinned": {
+          "repo_wide": 1
+        }
+      }
+    }
+  ]
+}

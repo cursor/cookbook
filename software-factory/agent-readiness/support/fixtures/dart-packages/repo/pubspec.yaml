@@ -1,0 +1,7 @@
+name: http_workspace
+publish_to: none
+environment:
+  sdk: ^3.5.0
+workspace:
+  - pkgs/http_lite
+  - pkgs/socket

@@ -1,0 +1,24 @@
+{
+  "purpose": "A Go service with CircleCI, a toolchain this rubric doesn't support. The module is listed as not assessed under its own name and keeps its whole share of changes; the report gives no level and says why, and it still notes the CI config.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 0,
+      "levels": {},
+      "top": [],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass",
+      "outcome": "not_assessed",
+      "notAssessed": [
+        "inventory-api"
+      ],
+      "shares": {
+        "inventory-api": 1
+      },
+      "signals": {
+        "ci": true
+      }
+    }
+  ]
+}

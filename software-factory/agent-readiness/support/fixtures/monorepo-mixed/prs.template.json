@@ -1,0 +1,14 @@
+{
+  "agent": [
+    { "number": 201, "head": "cursor/fix-order-rounding", "labels": ["bug"], "created": 28, "merged": 26, "files": ["packages/api/src/orders.js", "pnpm-lock.yaml"], "firstCheck": "failure", "changesRequested": true },
+    { "number": 203, "head": "cursor/orders-null-qty", "labels": ["bug"], "created": 25, "merged": 22, "files": ["packages/api/src/orders.js"], "firstCheck": "failure", "changesRequested": false },
+    { "number": 206, "head": "cursor/api-pagination", "labels": ["feature"], "created": 20, "merged": 17, "files": ["packages/api/src/orders.js", "packages/shared/src/money.js"], "firstCheck": "success", "changesRequested": false },
+    { "number": 209, "head": "cursor/api-timeouts", "labels": ["bug"], "created": 15, "merged": null, "files": ["packages/api/src/orders.js"], "firstCheck": "failure", "changesRequested": true },
+    { "number": 212, "head": "cursor/api-validation", "labels": ["bug"], "created": 9, "merged": 7, "files": ["packages/api/src/orders.js"], "firstCheck": "failure", "changesRequested": false },
+    { "number": 214, "head": "cursor/retry-cap", "labels": ["bug"], "created": 22, "merged": 20, "files": ["packages/worker/src/retry.js"], "firstCheck": "success", "changesRequested": false },
+    { "number": 217, "head": "cursor/worker-jitter", "labels": ["feature"], "created": 12, "merged": null, "files": ["packages/worker/src/retry.js"], "firstCheck": "failure", "changesRequested": true },
+    { "number": 219, "head": "cursor/worker-logging", "labels": ["bug"], "created": 6, "merged": 4, "files": ["packages/worker/src/retry.js"], "firstCheck": "failure", "changesRequested": true },
+    { "number": 221, "head": "cursor/format-negative", "labels": ["bug"], "created": 4, "merged": 2, "files": ["packages/shared/src/money.js"], "firstCheck": "success", "changesRequested": false }
+  ],
+  "other": { "count": 41, "startNumber": 300, "firstPass": 29, "merged": 35, "changesRequested": 7 }
+}

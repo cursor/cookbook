@@ -1,0 +1,13 @@
+{
+  "name": "bun-lock",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.2.19",
+  "scripts": {
+    "test": "bun test"
+  },
+  "dependencies": {
+    "rounding": "file:./lib/rounding"
+  }
+}

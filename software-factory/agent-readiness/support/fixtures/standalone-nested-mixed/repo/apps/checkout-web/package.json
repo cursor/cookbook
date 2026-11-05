@@ -1,0 +1,16 @@
+{
+  "name": "@storefront/checkout-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "lint": "node scripts/lint.mjs",
+    "typecheck": "node --experimental-strip-types scripts/typecheck.mjs",
+    "test": "node --experimental-strip-types --test test/cart.test.ts"
+  }
+}

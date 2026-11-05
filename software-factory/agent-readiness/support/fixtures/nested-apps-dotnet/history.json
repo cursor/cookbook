@@ -1,0 +1,46 @@
+{
+  "commits": [
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 70,
+      "paths": ["services/commerce-core/notes/n1.md", "services/commerce-core/notes/n2.md", "services/commerce-core/notes/n3.md", "services/commerce-core/notes/n4.md"],
+      "message": "Update commerce-core"
+    },
+    {
+      "author": "Contributor B",
+      "email": "b@example.com",
+      "daysAgo": 60,
+      "paths": ["apps/buyer-web/notes/n1.md", "apps/buyer-web/notes/n2.md", "apps/buyer-web/notes/n3.md", "apps/buyer-web/notes/n4.md", "apps/buyer-web/notes/n5.md"],
+      "message": "Update buyer-web"
+    },
+    {
+      "author": "Contributor C",
+      "email": "c@example.com",
+      "daysAgo": 40,
+      "paths": ["apps/admin-web/notes/n1.md", "apps/admin-web/notes/n2.md", "apps/admin-web/notes/n3.md", "apps/admin-web/notes/n4.md"],
+      "message": "Update admin-web"
+    },
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 20,
+      "paths": ["services/commerce-core/notes/n5.md", "services/commerce-core/notes/n6.md", "services/commerce-core/notes/n7.md"],
+      "message": "Update commerce-core"
+    },
+    {
+      "author": "Contributor C",
+      "email": "c@example.com",
+      "daysAgo": 15,
+      "paths": ["services/identity-dev/notes/n1.md", "services/identity-dev/notes/n2.md"],
+      "message": "Update identity-dev"
+    },
+    {
+      "author": "Contributor B",
+      "email": "b@example.com",
+      "daysAgo": 10,
+      "paths": ["apps/buyer-web/notes/n6.md", "apps/buyer-web/notes/n7.md", "apps/buyer-web/notes/n8.md", "apps/buyer-web/notes/n9.md"],
+      "message": "Update buyer-web"
+    }
+  ]
+}
