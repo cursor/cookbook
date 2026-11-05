@@ -57,6 +57,23 @@ class WorkspaceTest(unittest.TestCase):
         read_result = self.workspace.read_file("src/example.py")
         self.assertEqual(read_result["content"], "value = 2\nvalue = 2\n")
 
+    def test_file_tools_keep_existing_line_endings(self) -> None:
+        target = self.root / "windows.txt"
+        target.write_bytes(b"one\r\ntwo\r\nthree\r\n")
+
+        read_result = self.workspace.read_file("windows.txt", offset=2, limit=1)
+        self.assertEqual(read_result["content"], "two\r\n")
+        self.assertEqual(read_result["total_lines"], 3)
+
+        self.workspace.edit_file("windows.txt", "two", "TWO")
+        self.assertEqual(target.read_bytes(), b"one\r\nTWO\r\nthree\r\n")
+
+        self.workspace.edit_file("windows.txt", "TWO\r\nthree", "2\r\n3")
+        self.assertEqual(target.read_bytes(), b"one\r\n2\r\n3\r\n")
+
+        self.workspace.write_file("unix.txt", "a\nb\n")
+        self.assertEqual((self.root / "unix.txt").read_bytes(), b"a\nb\n")
+
     def test_glob_is_relative_and_bounded(self) -> None:
         self.workspace.write_file("src/agent.py", "")
         self.workspace.write_file("tests/test_agent.py", "")

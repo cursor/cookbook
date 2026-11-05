@@ -51,7 +51,7 @@ class Workspace:
             )
 
         try:
-            lines = target.read_text(encoding="utf-8").splitlines(keepends=True)
+            lines = _read_text_exact(target).splitlines(keepends=True)
         except UnicodeDecodeError as error:
             raise WorkspaceError(f"File is not valid UTF-8: {path}") from error
 
@@ -83,7 +83,7 @@ class Workspace:
             raise WorkspaceError(f"Path is a directory, not a file: {path}")
 
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(content, encoding="utf-8")
+        target.write_text(content, encoding="utf-8", newline="")
         return {
             "path": self._display_path(target),
             "characters_written": len(content),
@@ -110,7 +110,7 @@ class Workspace:
             )
 
         try:
-            content = target.read_text(encoding="utf-8")
+            content = _read_text_exact(target)
         except UnicodeDecodeError as error:
             raise WorkspaceError(f"File is not valid UTF-8: {path}") from error
 
@@ -127,7 +127,7 @@ class Workspace:
         updated = content.replace(old_text, new_text, replacements)
         if len(updated) > MAX_FILE_CHARS:
             raise WorkspaceError(f"Edited file would exceed the {MAX_FILE_CHARS}-character limit.")
-        target.write_text(updated, encoding="utf-8")
+        target.write_text(updated, encoding="utf-8", newline="")
         return {
             "path": self._display_path(target),
             "replacements": replacements,
@@ -476,6 +476,13 @@ class CodingAgent:
                 self._chat.append(self._tool_result(result, tool_call_id=tool_call.id or None))
 
         raise RuntimeError(f"Grok exceeded the {self.max_tool_rounds}-round tool-call limit.")
+
+
+def _read_text_exact(path: Path) -> str:
+    # newline="" keeps CRLF and CR line endings as they are on disk, so reads show
+    # the real text and edits do not rewrite every line ending in the file.
+    with path.open(encoding="utf-8", newline="") as handle:
+        return handle.read()
 
 
 def _parse_tool_arguments(raw_arguments: str) -> tuple[dict[str, Any], str | None]:
