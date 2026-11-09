@@ -1,0 +1,36 @@
+{
+  "purpose": "The healthy package on Yarn 1 with a packageManager pin. Corepack downloads Yarn during the install, so the package reaches Level 2. Where registry.yarnpkg.com is blocked, the second run points Corepack at the npm registry by name; without it the install is blocked, never a repo failure.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 2,
+      "levels": {
+        "yarn-classic": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:yarn-classic",
+      "noBlocker": true,
+      "safety": "pass",
+      "outcome": "proven"
+    },
+    {
+      "name": "with --registry-env COREPACK_NPM_REGISTRY",
+      "level": 2,
+      "levels": {
+        "yarn-classic": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:yarn-classic",
+      "noBlocker": true,
+      "safety": "pass",
+      "registryEnv": {
+        "COREPACK_NPM_REGISTRY": "https://registry.npmjs.org"
+      },
+      "outcome": "proven"
+    }
+  ]
+}

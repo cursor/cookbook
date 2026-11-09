@@ -1,0 +1,9 @@
+{
+  "agentGroups": [
+    { "files": ["packages/api/src/orders.js"], "count": 8, "firstPass": 6, "merged": 6, "changesRequested": 1, "labels": ["bug"] },
+    { "files": ["packages/api/src/orders.js", "packages/shared/src/money.js"], "count": 1, "firstPass": 1, "merged": 1, "changesRequested": 0, "labels": ["feature"] },
+    { "files": ["packages/worker/src/retry.js"], "count": 6, "firstPass": 2, "merged": 4, "changesRequested": 3, "labels": ["bug"] },
+    { "files": ["packages/shared/src/money.js"], "count": 2, "firstPass": 2, "merged": 2, "changesRequested": 0, "labels": ["bug"] }
+  ],
+  "other": { "count": 38, "startNumber": 400, "firstPass": 27, "merged": 33, "changesRequested": 6 }
+}

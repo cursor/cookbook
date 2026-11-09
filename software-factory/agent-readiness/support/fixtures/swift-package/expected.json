@@ -1,0 +1,25 @@
+{
+  "purpose": "A Swift package. It is found by Package.swift, named after the package, and listed as Swift, not supported yet, with a grammatical headline and no level.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 0,
+      "levels": {},
+      "top": [],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass",
+      "outcome": "not_assessed",
+      "notAssessed": [
+        "Greeter"
+      ],
+      "shares": {
+        "Greeter": 1
+      },
+      "unassessed": {
+        "share": 1,
+        "supportLink": true
+      }
+    }
+  ]
+}

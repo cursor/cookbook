@@ -1,0 +1,4 @@
+# Local defaults. Copy to .env; tests read it.
+DATABASE_URL=postgres://app@127.0.0.1:5432/app
+REDIS_URL=redis://127.0.0.1:6379
+SESSION_TTL_SECONDS=3600

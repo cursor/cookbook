@@ -1,0 +1,30 @@
+{
+  "purpose": "Release tooling and an asset build in a root package.json, with the Python app and its pytest suite next to it. The Python app is listed with its own share of changes as not supported yet, and the root package, which has no test script, is reported as going with that app and not assessed on its own, so the audit never says the repo has no tests.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 0,
+      "levels": {},
+      "top": [],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass",
+      "outcome": "not_assessed",
+      "notAssessed": [
+        "storefront",
+        "storefront-python"
+      ],
+      "shares": {
+        "storefront": 0.143,
+        "storefront-python": 0.857
+      },
+      "listed": [
+        "deploy_publish"
+      ],
+      "unassessed": {
+        "share": 1,
+        "supportLink": true
+      }
+    }
+  ]
+}

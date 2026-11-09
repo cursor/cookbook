@@ -1,0 +1,53 @@
+# Copy to .github/workflows/agent-readiness-recheck.yml in the audited repo.
+# Weekly, reruns the verification contract recorded in the last sealed audit, in a clean container,
+# with no agent involved. A failure lowers a level; a later pass restores it; a recheck never raises one.
+# It runs the scripts from a pinned accelerator release rather than the copy in the repo, checks the
+# last audit's seal against that release, and appends the result to the agent-readiness/history branch.
+name: agent-readiness-recheck
+on:
+  schedule:
+    - cron: "0 13 * * 1"
+  workflow_dispatch:
+permissions:
+  contents: write
+env:
+  SA_ACCELERATOR_REPO: cursor/cookbook
+  SA_ACCELERATOR_REF: agent-readiness-v0.1.0
+  SA_READINESS: node --experimental-strip-types --no-warnings .readiness-accelerator/software-factory/agent-readiness/skill/agent-readiness/scripts/readiness.ts
+  # The key the audits were sealed with. Without it, seals are unkeyed digests: they catch edits,
+  # but anyone with the scripts could reseal an edited audit.
+  SA_READINESS_SEAL_KEY: ${{ secrets.AGENT_READINESS_SEAL_KEY }}
+jobs:
+  recheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch the history branch
+        run: git fetch origin agent-readiness/history:agent-readiness/history
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check out the pinned accelerator
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.SA_ACCELERATOR_REPO }}
+          ref: ${{ env.SA_ACCELERATOR_REF }}
+          path: .readiness-accelerator
+          sparse-checkout: software-factory/agent-readiness/skill
+      - name: Verify the last audit's seal against the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        # Audits sealed on a laptop are unkeyed. Keep --allow-unkeyed until audits are sealed in CI
+        # with the key; then drop it, so a seal from anywhere else no longer verifies here.
+        run: $SA_READINESS verify-seal latest --release-repo "$SA_ACCELERATOR_REPO" --release-ref "$SA_ACCELERATOR_REF" --tier external-systems --allow-unkeyed
+      - name: Recheck
+        id: recheck
+        run: $SA_READINESS recheck
+        # Private registries: add `--registry-env NPM_TOKEN` to the audit, and pass the secret here:
+        # env:
+        #   NPM_TOKEN: ${{ secrets.NPM_READ_TOKEN }}
+      - name: Append to the history branch
+        if: always() && steps.recheck.outcome != 'skipped'
+        run: $SA_READINESS history push --push

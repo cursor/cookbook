@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "agent-readiness audit",
+  "type": "object",
+  "required": ["schema", "id", "kind", "createdAt", "state", "repo", "scenarios", "tier", "rubric", "skill", "seed", "environment", "profile", "assets", "contract", "instructions", "safety", "evidence", "mutants", "outcomes", "narration"],
+  "properties": {
+    "schema": { "const": "agent-readiness/audit@1" },
+    "id": { "type": "string", "pattern": "^aud-" },
+    "kind": { "const": "audit" },
+    "state": { "enum": ["draft", "sealed"] },
+    "repo": {
+      "type": "object",
+      "required": ["name", "commit", "dirtyTree"],
+      "properties": { "name": { "type": "string" }, "commit": { "type": "string" }, "dirtyTree": { "type": "boolean" } }
+    },
+    "scenarios": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "components"],
+        "properties": { "id": { "enum": ["first_pr", "bug_fixes", "features", "repo_wide"] }, "components": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } }
+      }
+    },
+    "tier": { "enum": ["read-only", "local-exec", "external-systems"] },
+    "skill": {
+      "type": "object",
+      "required": ["version", "scriptsDigest", "rubricDigest", "release"],
+      "properties": { "scriptsDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" }, "rubricDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+    },
+    "seed": { "type": "object", "required": ["value", "pinned"], "properties": { "pinned": { "type": "boolean" } } },
+    "environment": {
+      "type": "object",
+      "required": ["containerRuntime", "image", "registryEnv", "inheritEnv"],
+      "properties": { "registryEnv": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z_][A-Z0-9_]*$" } } }
+    },
+    "profile": { "type": ["object", "null"] },
+    "contract": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "component", "cwd", "command", "source", "reason", "timeoutSec"],
+        "properties": { "kind": { "enum": ["doctor", "install", "build", "lint", "typecheck", "test", "start"] } }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "checkId", "strength", "where", "result", "summary", "at"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^ev-\\d{3,}$" },
+          "strength": { "enum": ["asserted", "static", "executed", "clean_replay", "outcome_validated"] },
+          "where": { "enum": ["static", "host", "fresh_copy", "container"] },
+          "result": { "enum": ["pass", "fail", "not_run"] }
+        }
+      }
+    },
+    "mutants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "component", "result", "exitCodes"],
+        "properties": { "result": { "enum": ["caught", "survived", "discarded", "not_run"] } }
+      }
+    },
+    "sealed": {
+      "type": "object",
+      "required": ["at", "digest", "reportJsonDigest", "reportMdDigest"],
+      "properties": { "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" } }
+    }
+  }
+}

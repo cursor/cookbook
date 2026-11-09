@@ -1,0 +1,19 @@
+{
+  "purpose": "The test requires a folder (`../src/store`), which resolves to its index file, and also imports a style module. Planting faults must resolve the folder instead of crashing, skip the style constants no test would check, and catch every fault in the store.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 2,
+      "levels": {
+        "folder-import": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:folder-import",
+      "noBlocker": true,
+      "safety": "pass",
+      "outcome": "proven"
+    }
+  ]
+}

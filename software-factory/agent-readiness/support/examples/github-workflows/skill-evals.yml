@@ -1,0 +1,94 @@
+# For the repository that hosts this accelerator. Copy to .github/workflows/agent-readiness-evals.yml.
+# Every PR that touches the accelerator runs the deterministic suite. PRs that touch the skill, rubric
+# or evals also run the smoke skill evals against the real Cursor agent; full runs weekly and when the
+# default model changes. Without the CURSOR_API_KEY secret (for example on forks) the skill evals skip
+# with a notice. A hard-gate regression against support/evals/baseline.json fails the job, and so does a run
+# whose driver model, judge model, driver, rubric or judge prompt differs from the baseline's.
+name: agent-readiness-evals
+on:
+  pull_request:
+    paths:
+      - "software-factory/agent-readiness/**"
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: smoke or full
+        default: full
+      arms:
+        description: agent, plus control arms to measure the agent's lift over (scripted, skill-off)
+        default: agent,scripted
+permissions:
+  contents: read
+defaults:
+  run:
+    working-directory: software-factory/agent-readiness
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: software-factory/agent-readiness/.nvmrc
+      - run: npm ci
+      - run: npm run check
+
+  # Scripted gamed fixes the grader must reject, and an honest fix it must pass. No API key needed.
+  negative-evals:
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SA_READINESS_GRADER_SEED: ${{ secrets.SA_READINESS_GRADER_SEED }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: software-factory/agent-readiness/.nvmrc
+      - run: npm ci
+      - run: npm run evals -- --tag negative --concurrency 3 --junit support/evals/runs/negative-junit.xml
+
+  skill-evals:
+    needs: check
+    runs-on: ubuntu-latest
+    # A full run with every arm is about 650 runs at 3 repeats, roughly 3 hours at concurrency 3.
+    timeout-minutes: 360
+    env:
+      CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+      SA_READINESS_GRADER_SEED: ${{ secrets.SA_READINESS_GRADER_SEED }}
+      # Pinned to the instrument support/evals/baseline.json was recorded with; compare() refuses any other.
+      # Change them only together with a re-recorded baseline.
+      SA_READINESS_EVAL_MODEL: ${{ vars.SA_READINESS_EVAL_MODEL || 'claude-opus-5-5' }}
+      SA_READINESS_JUDGE_MODEL: ${{ vars.SA_READINESS_JUDGE_MODEL || 'gpt-5.6-sol' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Decide which set to run
+        id: set
+        run: |
+          if [ -z "$CURSOR_API_KEY" ]; then echo "::notice::CURSOR_API_KEY isn't set, so skill evals are skipped."; echo "tag=" >> "$GITHUB_OUTPUT"; exit 0; fi
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            if git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -qE '^software-factory/agent-readiness/(skill|support/evals)/'; then echo "tag=smoke" >> "$GITHUB_OUTPUT"; else echo "tag=" >> "$GITHUB_OUTPUT"; fi
+            echo "arms=agent" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.event.inputs.tag || 'full' }}" >> "$GITHUB_OUTPUT"
+            echo "arms=${{ github.event.inputs.arms || 'agent,scripted' }}" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.set.outputs.tag != ''
+        with:
+          node-version-file: software-factory/agent-readiness/.nvmrc
+      - if: steps.set.outputs.tag != ''
+        run: npm ci
+      # --max-runs covers the full suite with all three arms at 3 repeats; tests/workflow.test.ts checks it.
+      - name: Skill evals
+        if: steps.set.outputs.tag != ''
+        run: npm run evals -- --tag ${{ steps.set.outputs.tag }} --arm ${{ steps.set.outputs.arms }} --model "$SA_READINESS_EVAL_MODEL" --judge-model "$SA_READINESS_JUDGE_MODEL" --repeats 3 --concurrency 3 --max-runs 800 --json support/evals/runs/result.json --junit support/evals/runs/junit.xml --compare support/evals/baseline.json
+      - uses: actions/upload-artifact@v4
+        if: always() && steps.set.outputs.tag != ''
+        with:
+          name: agent-readiness-evals
+          path: software-factory/agent-readiness/support/evals/runs/

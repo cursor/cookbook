@@ -1,0 +1,15 @@
+{
+  "commits": [
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 60,
+      "paths": [
+        "pkgs/http_lite/example/android/app/notes.md",
+        "pkgs/http_lite/lib/notes.md",
+        "pkgs/socket/lib/notes.md"
+      ],
+      "message": "Notes"
+    }
+  ]
+}

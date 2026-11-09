@@ -1,0 +1,28 @@
+{
+  "purpose": "The healthy package with dummy keys in a test helper, the docs and generated code. They are listed for review, never blocking, so the package still reaches Level 2, and no value appears in the report.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 2,
+      "levels": {
+        "fake-secret-in-tests": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:fake-secret-in-tests",
+      "noBlocker": true,
+      "safety": "pass",
+      "outcome": "proven",
+      "listed": [
+        "secret"
+      ],
+      "absent": [
+        "AKIAIOSFODNN7EXAMPLE",
+        "ghp_000000000000000000000000000000000000",
+        "Zq8mN2pL7vX4kR9t",
+        "Hw3sJ9dK2mQ7xV5c"
+      ]
+    }
+  ]
+}

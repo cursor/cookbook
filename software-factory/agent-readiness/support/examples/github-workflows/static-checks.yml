@@ -1,0 +1,42 @@
+# Copy to .github/workflows/agent-readiness-static.yml in the audited repo.
+# Runs the read-only static checks on pull requests that touch agent instructions or package scripts:
+# stale commands and paths in AGENTS.md, rules, skills and the README, committed secrets,
+# and install hooks that pipe a download into a shell. No repo code runs.
+name: agent-readiness-static
+on:
+  pull_request:
+    paths:
+      - "**/AGENTS.md"
+      - "**/CLAUDE.md"
+      - ".cursor/**"
+      - ".github/copilot-instructions.md"
+      - ".github/instructions/**"
+      - "README.md"
+      - "**/package.json"
+permissions:
+  contents: read
+env:
+  SA_ACCELERATOR_REPO: cursor/cookbook
+  SA_ACCELERATOR_REF: agent-readiness-v0.1.0
+  SA_READINESS: node --experimental-strip-types --no-warnings .readiness-accelerator/software-factory/agent-readiness/skill/agent-readiness/scripts/readiness.ts
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check out the pinned accelerator
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.SA_ACCELERATOR_REPO }}
+          ref: ${{ env.SA_ACCELERATOR_REF }}
+          path: .readiness-accelerator
+          sparse-checkout: software-factory/agent-readiness/skill
+      - name: Static checks
+        run: |
+          $SA_READINESS init --tier read-only
+          $SA_READINESS scan --strict

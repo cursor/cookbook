@@ -1,0 +1,28 @@
+{
+  "purpose": "A Terraform root module with a nested module, and examples that take most recent changes. The root module is listed under the repo's name with every change, and examples/ is a satellite, not a component.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 0,
+      "levels": {},
+      "top": [],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass",
+      "outcome": "not_assessed",
+      "notAssessed": [
+        "terraform-modules"
+      ],
+      "shares": {
+        "terraform-modules": 1
+      },
+      "satellites": [
+        "examples"
+      ],
+      "unassessed": {
+        "share": 1,
+        "supportLink": true
+      }
+    }
+  ]
+}

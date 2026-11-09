@@ -1,0 +1,32 @@
+{
+  "commits": [
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 70,
+      "paths": ["apps/checkout-web/notes/n1.md", "apps/checkout-web/notes/n2.md", "apps/checkout-web/notes/n3.md", "apps/checkout-web/notes/n4.md", "apps/checkout-web/notes/n5.md"],
+      "message": "Update checkout-web"
+    },
+    {
+      "author": "Contributor B",
+      "email": "b@example.com",
+      "daysAgo": 50,
+      "paths": ["services/commerce-core/notes/n1.md", "services/commerce-core/notes/n2.md", "services/commerce-core/notes/n3.md", "services/commerce-core/tests/notes/n4.md", "services/commerce-core/tests/notes/n5.md", "services/commerce-core/tests/notes/n6.md"],
+      "message": "Update commerce-core"
+    },
+    {
+      "author": "Contributor C",
+      "email": "c@example.com",
+      "daysAgo": 30,
+      "paths": ["services/identity-dev/notes/n1.md", "services/identity-dev/notes/n2.md", "bench/checkout-load/notes/n1.md", "bench/checkout-load/notes/n2.md"],
+      "message": "Update identity-dev and the load script"
+    },
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 10,
+      "paths": ["apps/checkout-web/notes/n6.md", "apps/checkout-web/notes/n7.md", "apps/checkout-web/notes/n8.md", "apps/checkout-web/notes/n9.md", "apps/checkout-web/notes/n10.md"],
+      "message": "Update checkout-web"
+    }
+  ]
+}

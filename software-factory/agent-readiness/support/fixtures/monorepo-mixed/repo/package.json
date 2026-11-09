@@ -1,0 +1,14 @@
+{
+  "name": "monorepo-mixed",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "npm run test --workspaces"
+  }
+}

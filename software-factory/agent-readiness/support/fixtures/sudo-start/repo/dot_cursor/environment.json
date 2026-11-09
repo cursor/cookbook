@@ -1,0 +1,4 @@
+{
+  "install": "npm ci",
+  "start": "sudo service docker start"
+}

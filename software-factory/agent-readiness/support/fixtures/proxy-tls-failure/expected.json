@@ -1,0 +1,18 @@
+{
+  "purpose": "The build downloads from a server whose certificate isn't trusted, as behind TLS inspection. The TLS error is diagnosed as the network's and the build is blocked, so the report says Level 1 couldn't be proved here instead of giving a confident Level 0.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 0,
+      "levels": {
+        "proxy-tls-failure": 0
+      },
+      "top": [],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass",
+      "outcome": "blocked",
+      "diagnosis": "TLS or certificate error"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "agentGroups": [
+    { "files": ["src/pricing.js"], "count": 30, "firstPass": 25, "merged": 28, "changesRequested": 3, "labels": ["bug"] },
+    { "files": ["src/pricing.js", "test/pricing.test.js"], "count": 12, "firstPass": 10, "merged": 11, "changesRequested": 2, "labels": ["feature"] }
+  ],
+  "other": { "count": 32, "startNumber": 300, "firstPass": 24, "merged": 28, "changesRequested": 5 }
+}

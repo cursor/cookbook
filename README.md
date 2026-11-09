@@ -16,6 +16,14 @@ A guided project hook setup for audit logging, sensitive prompt guards, and foll
 
 Run Cursor Cloud Agent workers on customer-managed AWS infrastructure with examples for EC2 + Docker and ECS/Fargate.
 
+## Software Factory
+
+Tools and templates for preparing repos and teams to ship work with coding agents.
+
+### [Agent readiness](software-factory/agent-readiness)
+
+A copyable Cursor skill that audits a repository for what would stop a coding agent: it runs install, build and test in a clean container, plants faults the tests should catch, and seals a leveled report. Copy [`skill/agent-readiness`](software-factory/agent-readiness/skill/agent-readiness) into a repo's `.cursor/skills/` to use it.
+
 ## Cursor SDK
 
 The Cursor SDK is the TypeScript API for running Cursor's coding agent from your own apps, scripts, and workflows. It supports the same agent across local workspaces and cloud runtimes, streams agent events as runs progress, and lets you manage prompts, models, cancellation, artifacts, and conversation state from code.

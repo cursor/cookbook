@@ -1,0 +1,18 @@
+{
+  "purpose": "The README setup steps use the wrong package manager, a missing Make target and a missing doc.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 1,
+      "levels": {
+        "stale-setup-docs": 1
+      },
+      "top": [
+        "instructions:repo"
+      ],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass"
+    }
+  ]
+}

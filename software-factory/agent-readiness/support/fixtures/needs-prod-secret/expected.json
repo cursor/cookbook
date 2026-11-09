@@ -1,0 +1,21 @@
+{
+  "purpose": "Tests need a live payments key, and an install hook pipes a download into a shell.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 0,
+      "levels": {
+        "needs-prod-secret": 0
+      },
+      "top": [
+        "clean.test:needs-prod-secret"
+      ],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "fail",
+      "waiting": [
+        "safety:hook"
+      ]
+    }
+  ]
+}

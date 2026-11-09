@@ -1,0 +1,33 @@
+{
+  "purpose": "The repo's setup script needs a tool that only its declared image installs. In a container the audit builds that image and the app reaches Level 2. With no container runtime, the missing tool is a limit of the machine: the shared install is blocked, the app's own frozen install runs so its checks still run on the host, Level 1 stays blocked, and the report says the declared image installs the tool.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 2,
+      "levels": {
+        "pricing-service": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:pricing-service",
+      "noBlocker": true,
+      "safety": "pass",
+      "outcome": "proven"
+    },
+    {
+      "name": "no container runtime",
+      "runtime": "none",
+      "level": 0,
+      "levels": {
+        "pricing-service": 0
+      },
+      "top": [],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass",
+      "outcome": "blocked",
+      "coverage": "On this machine pricegen is not installed, an environment limit rather than a repo defect; the declared image installs pricegen\\."
+    }
+  ]
+}

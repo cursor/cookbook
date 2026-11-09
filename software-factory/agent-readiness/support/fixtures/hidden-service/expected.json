@@ -1,0 +1,21 @@
+{
+  "purpose": "Tests need Postgres on localhost, which only a prepared machine has.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 0,
+      "levels": {
+        "hidden-service": 0
+      },
+      "top": [
+        "clean.test:hidden-service"
+      ],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass",
+      "waiting": [
+        "faults:hidden-service"
+      ]
+    }
+  ]
+}

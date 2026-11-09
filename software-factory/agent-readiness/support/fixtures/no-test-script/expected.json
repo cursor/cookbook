@@ -1,0 +1,19 @@
+{
+  "purpose": "Build and lint scripts but no test script. The component can't check its own changes, so it stays at Level 0 with a missing-tests item, not a failing one.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 0,
+      "levels": {
+        "no-test-script": 0
+      },
+      "top": [
+        "clean.test:no-test-script"
+      ],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass",
+      "outcome": "proven"
+    }
+  ]
+}

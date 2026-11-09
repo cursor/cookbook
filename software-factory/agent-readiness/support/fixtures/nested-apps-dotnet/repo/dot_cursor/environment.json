@@ -1,0 +1,3 @@
+{
+  "start": "sudo service docker start"
+}

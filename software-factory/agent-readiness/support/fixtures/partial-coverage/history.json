@@ -1,0 +1,26 @@
+{
+  "commits": [
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 70,
+      "paths": [
+        "inventory/notes.md",
+        "inventory/stock_notes.md",
+        "src/notes.md"
+      ],
+      "message": "Inventory notes"
+    },
+    {
+      "author": "Contributor B",
+      "email": "b@example.com",
+      "daysAgo": 40,
+      "paths": [
+        "inventory/notes.md",
+        "src/notes.md",
+        "test/notes.md"
+      ],
+      "message": "More notes"
+    }
+  ]
+}

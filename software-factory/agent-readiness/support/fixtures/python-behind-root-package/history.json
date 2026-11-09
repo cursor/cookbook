@@ -1,0 +1,35 @@
+{
+  "commits": [
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 60,
+      "paths": [
+        "storefront/cart.py",
+        "tests/test_cart.py",
+        "storefront/orders.py"
+      ],
+      "message": "Add orders"
+    },
+    {
+      "author": "Contributor B",
+      "email": "b@example.com",
+      "daysAgo": 40,
+      "paths": [
+        "storefront/cart.py",
+        "storefront/orders.py",
+        "tests/test_orders.py"
+      ],
+      "message": "Cart totals"
+    },
+    {
+      "author": "Contributor A",
+      "email": "a@example.com",
+      "daysAgo": 20,
+      "paths": [
+        "scripts/release.mjs"
+      ],
+      "message": "Release script"
+    }
+  ]
+}

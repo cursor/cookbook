@@ -1,0 +1,5 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommerceCore", "src\CommerceCore\CommerceCore.csproj", "{6A3F0C2E-0001-4C1B-9E1A-000000000001}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CommerceCore.Tests", "tests\CommerceCore.Tests\CommerceCore.Tests.csproj", "{6A3F0C2E-0002-4C1B-9E1A-000000000002}"
+EndProject

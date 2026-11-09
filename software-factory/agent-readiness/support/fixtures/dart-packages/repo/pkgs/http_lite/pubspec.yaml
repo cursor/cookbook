@@ -1,0 +1,7 @@
+name: http_lite
+version: 1.0.0
+environment:
+  sdk: ^3.5.0
+resolution: workspace
+dev_dependencies:
+  test: ^1.25.0

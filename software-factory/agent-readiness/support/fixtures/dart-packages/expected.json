@@ -1,0 +1,27 @@
+{
+  "purpose": "A Dart workspace with two packages, one with a Flutter example whose android/ shell has Gradle files. Each package is listed as Dart, and the Gradle files stay part of their package instead of becoming JVM components that take the changes.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 0,
+      "levels": {},
+      "top": [],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass",
+      "outcome": "not_assessed",
+      "notAssessed": [
+        "http_lite",
+        "socket"
+      ],
+      "shares": {
+        "http_lite": 0.667,
+        "socket": 0.333
+      },
+      "unassessed": {
+        "share": 1,
+        "supportLink": true
+      }
+    }
+  ]
+}

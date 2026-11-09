@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "agent-readiness report view model",
+  "type": "object",
+  "required": ["schema", "repo", "audit", "scale", "scenarios", "maturity", "components", "executive", "actions", "matrix", "roadmap", "progress", "details"],
+  "properties": {
+    "schema": { "const": "agent-readiness/report@1" },
+    "repo": { "type": "string", "minLength": 1 },
+    "audit": {
+      "type": "object",
+      "required": ["id", "date", "commit", "dirtyTree", "rubric", "tier", "scriptsDigest", "seedPinned", "sealStatus", "staleCopy", "previous", "storedAt"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^aud-" },
+        "date": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+        "commit": { "type": "string" },
+        "dirtyTree": { "type": "boolean" },
+        "rubric": { "type": "string" },
+        "tier": { "enum": ["read-only", "local-exec", "external-systems"] },
+        "scriptsDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+        "seedPinned": { "type": "boolean" },
+        "sealStatus": { "type": "string" },
+        "staleCopy": { "type": ["string", "null"] },
+        "previous": { "type": ["string", "null"] },
+        "storedAt": { "type": "string" }
+      }
+    },
+    "scenarios": {
+      "type": "array",
+      "items": { "type": "object", "required": ["id", "label", "components"], "properties": { "id": { "$ref": "#/$defs/activity" }, "components": { "type": "array", "minItems": 1, "items": { "type": "string" } } } }
+    },
+    "scale": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": ["level", "name", "plain", "meaning", "measuredBy"],
+        "properties": { "level": { "$ref": "#/$defs/level" }, "measuredBy": { "enum": ["audit", "outcomes"] } }
+      }
+    },
+    "maturity": {
+      "type": "object",
+      "required": ["level", "rule", "couldBe", "couldBeReason", "setBy", "partialCoverage", "assessedComponents", "outcome", "confidence", "capReasons", "unproven", "next"],
+      "properties": {
+        "level": { "$ref": "#/$defs/level" },
+        "rule": { "type": "string", "minLength": 1 },
+        "couldBe": { "anyOf": [{ "$ref": "#/$defs/level" }, { "type": "null" }] },
+        "setBy": { "type": "array", "items": { "type": "string" } },
+        "partialCoverage": { "type": "boolean" },
+        "assessedComponents": { "type": "integer", "minimum": 0 },
+        "outcome": { "enum": ["proven", "blocked", "not_assessed"] },
+        "confidence": {
+          "type": "object",
+          "required": ["level", "reasons"],
+          "properties": { "level": { "enum": ["high", "medium", "low"] }, "reasons": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } }
+        },
+        "capReasons": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["component", "condition", "label", "state", "reason"],
+            "properties": { "state": { "enum": ["not_met", "unknown", "blocked"] } }
+          }
+        }
+      }
+    },
+    "components": {
+      "type": "object",
+      "required": ["shape", "included", "excluded"],
+      "properties": {
+        "shape": { "enum": ["single", "monorepo", "sampled_monorepo"] },
+        "included": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "path", "toolchain", "manifest", "lockfile", "changeShare", "active", "level", "couldBe", "unproven", "capReasons", "scenarios"],
+            "properties": {
+              "level": { "anyOf": [{ "$ref": "#/$defs/level" }, { "type": "null" }] },
+              "couldBe": { "anyOf": [{ "$ref": "#/$defs/level" }, { "type": "null" }] },
+              "scenarios": {
+                "type": "array",
+                "items": { "type": "object", "required": ["id", "label", "level", "couldBe", "unproven"], "properties": { "id": { "$ref": "#/$defs/activity" }, "level": { "anyOf": [{ "$ref": "#/$defs/level" }, { "type": "null" }] } } }
+              }
+            }
+          }
+        },
+        "excluded": { "type": "array", "items": { "type": "object", "required": ["id", "path", "toolchain", "manifest", "lockfile", "changeShare", "reason"] } }
+      }
+    },
+    "executive": {
+      "type": "object",
+      "required": ["heading", "headline", "numbers", "nextLine", "gaps", "ask", "coverage", "noBlocker"],
+      "properties": {
+        "heading": { "type": "string", "pattern": "^(Level [0-4] of 4, |Level 1 unproven on this machine: |Not assessed: )" },
+        "headline": { "type": "string", "minLength": 1, "maxLength": 400 },
+        "numbers": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["label", "value", "comparison"],
+            "properties": { "label": { "type": "string" }, "value": { "type": "string" }, "comparison": { "type": "string", "minLength": 1 } }
+          }
+        },
+        "gaps": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["rank", "text", "blocks", "itemId"],
+            "properties": { "rank": { "type": "integer", "minimum": 1, "maximum": 3 } }
+          }
+        },
+        "ask": { "type": "string", "minLength": 1 },
+        "coverage": { "type": "string", "minLength": 1 },
+        "noBlocker": { "type": "boolean" }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": ["rank", "itemId", "title", "startNow", "why", "movesTheNeedle", "watch", "research", "effortAndOwner", "decision", "doneWhen", "dependsOn", "impact", "effort"],
+        "properties": {
+          "impact": { "type": "number", "minimum": 0, "maximum": 1 },
+          "effort": { "enum": ["small", "medium", "large"] }
+        }
+      }
+    },
+    "matrix": {
+      "type": "object",
+      "required": ["quadrants", "points"],
+      "properties": {
+        "quadrants": { "type": "array", "minItems": 4, "maxItems": 4 },
+        "points": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["label", "x", "y", "itemId"],
+            "properties": { "x": { "type": "number", "minimum": 0, "maximum": 1 }, "y": { "type": "number", "minimum": 0, "maximum": 1 } }
+          }
+        }
+      }
+    },
+    "roadmap": {
+      "type": "object",
+      "required": ["owner", "doneCount", "total", "items"],
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "order", "title", "status", "statusText", "unlocks", "decision"],
+            "properties": { "status": { "enum": ["done", "in_progress", "next", "start_now", "waiting", "later"] } }
+          }
+        }
+      }
+    },
+    "progress": { "type": ["object", "null"] },
+    "details": {
+      "type": "object",
+      "required": ["steps", "checks", "notAssessed", "levelRules", "outcomes", "assets", "missingAssets", "signals", "evidence", "record"],
+      "properties": {
+        "signals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "label", "found", "detail"],
+            "properties": { "id": { "enum": ["ci", "targeted_tests", "env_sample", "isolation", "agents_md_length"] }, "found": { "type": ["boolean", "null"] } }
+          }
+        },
+        "levelRules": { "type": "object", "required": ["level1", "level2", "scenarios"] },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "why", "sources", "result", "ok", "counts", "evidence"],
+            "properties": {
+              "sources": {
+                "type": "array",
+                "items": { "type": "object", "required": ["claim", "caveat", "url"], "properties": { "url": { "type": "string", "pattern": "^https://" }, "caveat": { "type": "string", "minLength": 1 } } }
+              },
+              "counts": { "type": "object", "required": ["passed", "failed", "notRun"] }
+            }
+          }
+        },
+        "outcomes": {
+          "anyOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["window", "filter", "source", "series", "byComponent", "multiComponentNote", "matchedPrs", "caveat"],
+              "properties": {
+                "series": {
+                  "type": "array",
+                  "minItems": 2,
+                  "items": {
+                    "type": "object",
+                    "required": ["label", "opened", "merged", "firstTimeCi", "changesRequested", "medianDaysToMerge"],
+                    "properties": {
+                      "merged": { "$ref": "#/$defs/rate" },
+                      "firstTimeCi": { "$ref": "#/$defs/rate" },
+                      "changesRequested": { "$ref": "#/$defs/rate" }
+                    }
+                  }
+                },
+                "byComponent": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["component", "prs", "firstTimeCi", "changesRequested"],
+                    "properties": { "firstTimeCi": { "$ref": "#/$defs/rate" }, "changesRequested": { "$ref": "#/$defs/rate" } }
+                  }
+                },
+                "caveat": { "type": "string", "minLength": 1 }
+              }
+            }
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": { "type": "object", "required": ["id", "check", "component", "ran", "where", "result", "summary"], "properties": { "id": { "type": "string", "pattern": "^ev-\\d{3,}$" } } }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "level": { "type": "integer", "minimum": 0, "maximum": 4 },
+    "activity": { "enum": ["first_pr", "bug_fixes", "features", "repo_wide"] },
+    "rate": {
+      "type": "object",
+      "required": ["count", "n", "rate", "window"],
+      "properties": {
+        "count": { "type": "integer", "minimum": 0 },
+        "n": { "type": "integer", "minimum": 0 },
+        "rate": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "window": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

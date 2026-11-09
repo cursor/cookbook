@@ -1,0 +1,20 @@
+{
+  "purpose": "The healthy package with a console.log left in the source, which its lint script rejects. It installs, builds and passes its tests, so it reaches Level 1, and the failing lint command is the one thing between it and Level 2.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 1,
+      "levels": {
+        "lint-fails": 1
+      },
+      "top": [
+        "commands:lint-fails"
+      ],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "pass",
+      "outcome": "proven",
+      "diagnosis": "remove console.log"
+    }
+  ]
+}

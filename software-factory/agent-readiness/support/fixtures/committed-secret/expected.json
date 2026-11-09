@@ -1,0 +1,22 @@
+{
+  "purpose": "An AWS-shaped access key in config/dev.env, which ships with the app. The safety check fails, so the package stops at Level 1 with removing the secret as its top item, and the key's value never appears in the report or the audit.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 1,
+      "levels": {
+        "committed-secret": 1
+      },
+      "top": [
+        "safety:secret"
+      ],
+      "startNow": null,
+      "noBlocker": false,
+      "safety": "fail",
+      "outcome": "proven",
+      "absent": [
+        "AKIAQQQQFAKEKEY00000"
+      ]
+    }
+  ]
+}

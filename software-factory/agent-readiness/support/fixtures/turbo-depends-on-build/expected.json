@@ -1,0 +1,23 @@
+{
+  "purpose": "An npm workspace where app imports core's built output and turbo.json builds core first. The audit builds packages one by one, so app's build can't find @fx/core: that is blocked, a limit of the audit rather than a repo defect, while core reaches Level 2.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 0,
+      "levels": {
+        "app": 0,
+        "core": 2
+      },
+      "top": [],
+      "startNow": "delegate:core",
+      "noBlocker": false,
+      "safety": "pass",
+      "outcome": "blocked",
+      "diagnosis": "sibling package the audit didn't build first",
+      "unassessed": {
+        "share": 0,
+        "supportLink": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "name": "checkout-load",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node run.mjs"
+  }
+}

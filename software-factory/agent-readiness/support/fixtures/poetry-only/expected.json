@@ -1,0 +1,23 @@
+{
+  "purpose": "A Poetry project with poetry.lock and unittest tests. The audit adds the Poetry that wrote the lock (poetry==1.8.2) to its Python image, runs the frozen install into .venv, and the package reaches Level 2. Where PyPI is blocked, Poetry can't be added, so the install is blocked and the audit gives no level, never a Level 0 for a missing poetry.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 2,
+      "levels": {
+        "poetry-only": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:poetry-only",
+      "noBlocker": true,
+      "safety": "pass",
+      "outcome": "proven",
+      "contract": {
+        "cmd-repo-install": "POETRY_VIRTUALENVS_IN_PROJECT=true poetry install --sync --no-interaction -v",
+        "cmd-poetry-only-test": ".venv/bin/python -m unittest discover -s tests -t ."
+      }
+    }
+  ]
+}

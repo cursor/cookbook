@@ -1,0 +1,30 @@
+{
+  "purpose": "A healthy Node package next to a Go service that takes half of recent changes. The package reaches Level 2, and part 1 says outright that half the changes aren't assessed and why, with medium confidence.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 2,
+      "levels": {
+        "partial-coverage": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:partial-coverage",
+      "noBlocker": true,
+      "safety": "pass",
+      "outcome": "proven",
+      "notAssessed": [
+        "inventory"
+      ],
+      "shares": {
+        "inventory": 0.5
+      },
+      "coverage": "Partial coverage: 50% of changes aren't assessed",
+      "unassessed": {
+        "share": 0.5,
+        "supportLink": true
+      }
+    }
+  ]
+}

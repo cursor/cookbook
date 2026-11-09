@@ -1,0 +1,2 @@
+@acme:registry=https://registry.example.invalid/
+//registry.example.invalid/:_authToken=${NPM_TOKEN}

@@ -1,0 +1,23 @@
+{
+  "purpose": "The lint script runs with --fix, reformats every source file and reads the build's output. The audit runs it check-only and before the build, so it neither rewrites the copy faults are planted in nor lints generated code.",
+  "runs": [
+    {
+      "name": "default",
+      "level": 2,
+      "levels": {
+        "write-mode-lint": 2
+      },
+      "top": [
+        "targets"
+      ],
+      "startNow": "delegate:write-mode-lint",
+      "noBlocker": true,
+      "safety": "pass",
+      "contract": {
+        "cmd-write-mode-lint-lint": "npm exec -c 'node scripts/lint.mjs'"
+      },
+      "neverRan": ["--fix"],
+      "skipped": 1
+    }
+  ]
+}
