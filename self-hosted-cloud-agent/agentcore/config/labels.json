@@ -1,0 +1,6 @@
+{
+  "environment": "lab",
+  "infrastructure": "agentcore",
+  "runtime": "agentcore-instances",
+  "owner": "platform-team"
+}
