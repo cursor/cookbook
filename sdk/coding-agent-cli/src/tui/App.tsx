@@ -774,7 +774,7 @@ function wrapText(value: string, width: number) {
     while (line.length > width) {
       let breakAt = line.lastIndexOf(" ", width)
       if (breakAt < width * 0.5) {
-        breakAt = width
+        breakAt = hardBreakIndex(line, width)
       }
 
       lines.push(line.slice(0, breakAt).trimEnd())
@@ -785,6 +785,30 @@ function wrapText(value: string, width: number) {
   }
 
   return lines
+}
+
+const graphemeSegmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" })
+
+// The last grapheme boundary at or before `width` UTF-16 units, so a hard
+// break never lands inside a surrogate pair or a multi-code-point cluster
+// (emoji with skin tones or ZWJ sequences), which would render as two broken
+// characters on the two lines. Always advances by at least one grapheme.
+function hardBreakIndex(line: string, width: number) {
+  let index = 0
+
+  for (const { segment } of graphemeSegmenter.segment(line)) {
+    if (index > 0 && index + segment.length > width) {
+      break
+    }
+
+    index += segment.length
+
+    if (index >= width) {
+      break
+    }
+  }
+
+  return index
 }
 
 function parseInlineMarkdown(value: string): TranscriptPart[] {
