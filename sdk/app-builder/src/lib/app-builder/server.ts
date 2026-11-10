@@ -334,12 +334,15 @@ async function promptProjectNameWithXml(
     }, getProjectNameTimeoutMs())
   })
 
-  const agent = Agent.create({
-    apiKey,
-    model: { id: process.env.CURSOR_PROJECT_NAME_MODEL ?? "composer-2" },
-  })
-
+  let agent: SDKAgent | undefined
   try {
+    agent = await Promise.race([
+      Agent.create({
+        apiKey,
+        model: { id: process.env.CURSOR_PROJECT_NAME_MODEL ?? "composer-2" },
+      }),
+      timeoutPromise,
+    ])
     const run = await agent.send(buildProjectNamePrompt(context))
 
     return await Promise.race([
@@ -350,7 +353,7 @@ async function promptProjectNameWithXml(
     if (timeout) {
       clearTimeout(timeout)
     }
-    agent.close()
+    agent?.close()
   }
 }
 
