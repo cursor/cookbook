@@ -162,6 +162,7 @@ async function runPlainPrompt(
     model: { id: options.model },
   })
   let assistantEndedWithNewline = true
+  let resultStatus: string | undefined
 
   const annotate = (message: string) => {
     if (!assistantEndedWithNewline) {
@@ -175,6 +176,9 @@ async function runPlainPrompt(
     await session.sendPrompt({
       prompt,
       onEvent: (event) => {
+        if (event.type === "result") {
+          resultStatus = event.status
+        }
         renderPlainEvent(event, annotate, (text) => {
           process.stdout.write(text)
           assistantEndedWithNewline = text.endsWith("\n")
@@ -183,6 +187,13 @@ async function runPlainPrompt(
     })
   } finally {
     await session.dispose()
+  }
+
+  // `run.wait()` resolves for an errored or cancelled run rather than
+  // throwing, so without this a failed run would exit 0 and a script piping
+  // into the CLI could not tell it from a finished one.
+  if (resultStatus !== undefined && resultStatus !== "finished") {
+    process.exitCode = 1
   }
 }
 
