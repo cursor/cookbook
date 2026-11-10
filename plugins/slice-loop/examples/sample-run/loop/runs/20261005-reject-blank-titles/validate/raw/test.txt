@@ -1,0 +1,41 @@
+# compressed log: 40 lines in, 40 lines out, 1 failure-like lines
+TAP version 13
+# Subtest: AC-1: rejects an empty title with 400 and creates no task
+ok 1 - AC-1: rejects an empty title with 400 and creates no task
+  ---
+  duration_ms: 76.682874
+  ...
+# Subtest: AC-2: rejects a whitespace-only title with 400 and creates no task
+ok 2 - AC-2: rejects a whitespace-only title with 400 and creates no task
+  ---
+  duration_ms: 9.84953
+  ...
+# Subtest: AC-3: rejects a missing title with 400 and creates no task
+ok 3 - AC-3: rejects a missing title with 400 and creates no task
+  ---
+  duration_ms: 3.027079
+  ...
+# Subtest: still creates a task from a valid title
+ok 4 - still creates a task from a valid title
+  ---
+  duration_ms: 1.724758
+  ...
+# Subtest: lists seeded tasks in order
+ok 5 - lists seeded tasks in order
+  ---
+  duration_ms: 0.891652
+  ...
+# Subtest: add trims the title and assigns increasing ids
+ok 6 - add trims the title and assigns increasing ids
+  ---
+  duration_ms: 0.144595
+  ...
+1..6
+# tests 6
+# suites 0
+# pass 6
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 154.889556

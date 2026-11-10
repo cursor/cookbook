@@ -1,0 +1,23 @@
+{
+  "name": "slice-loop",
+  "displayName": "Slice Loop",
+  "version": "0.1.0",
+  "description": "A test-driven plan-tasks → scaffold → implement → validate → review → reflect loop that a cloud agent can run autonomously in any codebase. /create-loop adapts the template loop to the project it is deployed into; the implement-slice subagent runs it end to end and emits a compressed, reviewable evidence packet.",
+  "author": {
+    "name": "Cursor Field Engineering"
+  },
+  "license": "MIT",
+  "keywords": [
+    "tdd",
+    "autonomous-loop",
+    "cloud-agents",
+    "validation",
+    "e2e",
+    "review",
+    "subagents"
+  ],
+  "category": "developer-tools",
+  "tags": ["workflow", "testing", "validation", "planning"],
+  "skills": "./skills/",
+  "agents": "./agents/"
+}

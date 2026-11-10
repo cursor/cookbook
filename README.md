@@ -10,6 +10,12 @@ Cursor Hooks let you run custom checks and workflows around agent events such as
 
 A guided project hook setup for audit logging, sensitive prompt guards, and follow-up checks that keep Cursor skills aligned with code changes.
 
+## Cursor Plugins
+
+### [Slice Loop](plugins/slice-loop)
+
+A plugin that adds a test-driven, autonomous build loop to any codebase: plan, scaffold failing tests, implement, validate, review, and reflect. `/create-loop` adapts the template skills to the project, and the `implement-slice` subagent runs the loop end to end and hands back a compressed review packet with a verdict, acceptance-criteria table, screenshots, and recordings.
+
 ## Cloud Agents
 
 ### [Self-hosted Cloud Agents lab](cloud-agent)
