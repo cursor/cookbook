@@ -1,7 +1,6 @@
 ---
 name: dag-task-runner
 description: Decompose a user's task into a DAG of subtasks and execute them with Cursor SDK local subagents in topological order, rendering live streaming status to a canvas. Each task has a complexity (HIGH/MED/LOW) that maps to a model. Use when the user asks to fan out work, decompose a task into a DAG, run subagents in parallel, or break a large task into a dependency graph.
-disable-model-invocation: true
 ---
 
 # DAG Task Runner
@@ -161,7 +160,7 @@ Same `--canvas-path` as Step 1. The runner:
 | `--models-file <path>` | — | JSON file containing a partial complexity → model override map. |
 | `--task-timeout-ms <ms>` | `1200000` (20 min) | Marks a task `ERROR` if it runs too long. |
 | `--stream-publish-ms <ms>` | `500` | Throttles live canvas streaming writes. |
-| `--stream-idle-timeout-ms <ms>` | `300000` (5 min) | Marks a task `ERROR` if no stream events arrive. |
+| `--stream-idle-timeout-ms <ms>` | `300000` (5 min) | Marks a task `ERROR` if no stream events arrive. Paused while the SDK is reconnecting. |
 | `--debounce <ms>` | `200` | Canvas write debounce interval. |
 
 ### Step 4 — Summarize
@@ -206,7 +205,7 @@ set -a && source .env && set +a
 | `--init-only`               | `false`              | Write the initial all-`PENDING` canvas and exit. No `CURSOR_API_KEY` required.     |
 | `--task-timeout-ms`         | `1200000` (20 min)   | Marks a task `ERROR` if it exceeds this duration.                                  |
 | `--stream-publish-ms`       | `500` (ms)           | Throttles live canvas streaming writes to avoid excessive cloning.                 |
-| `--stream-idle-timeout-ms`  | `300000` (5 min)     | Marks a task `ERROR` if no stream events arrive within this window.                |
+| `--stream-idle-timeout-ms`  | `300000` (5 min)     | Marks a task `ERROR` if no stream events arrive within this window. Paused while the SDK is reconnecting. |
 
 ## Caveats
 
