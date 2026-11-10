@@ -199,6 +199,12 @@ export async function requireSession(request: Request): Promise<Session> {
     throw new UnknownSessionError()
   }
 
+  // The client keeps sending the id it has (it only learns a new one from
+  // POST /api/session on page load), so register the restored session under
+  // that id too. Otherwise every request after a server restart validates the
+  // persisted key against the Cursor API again and adds another session.
+  sessions.set(sessionId, restoredSession)
+
   return restoredSession
 }
 
