@@ -130,6 +130,8 @@ const appBuilderRoot = path.join(os.homedir(), ".app-builder")
 const workspaceRoot = path.join(appBuilderRoot, "sessions")
 const settingsPath = path.join(appBuilderRoot, "settings.json")
 const DEFAULT_PROJECT_NAME_TIMEOUT_MS = 15_000
+const packageManagerCommand = "pnpm"
+const useShellForPnpm = process.platform === "win32"
 const APP_BUILDER_INSTRUCTIONS = [
   "You are building a local Vite React TypeScript application for a live preview product.",
   "Edit files directly in the current workspace. The dev server is already running and hot reloads when files change.",
@@ -334,12 +336,18 @@ async function promptProjectNameWithXml(
     }, getProjectNameTimeoutMs())
   })
 
-  const agent = Agent.create({
-    apiKey,
-    model: { id: process.env.CURSOR_PROJECT_NAME_MODEL ?? "composer-2" },
-  })
+  // Agent.create() is async since @cursor/sdk 1.0.x; race it against the
+  // same deadline as the run so a slow create cannot stall name generation.
+  let agent: SDKAgent | undefined
 
   try {
+    agent = await Promise.race([
+      Agent.create({
+        apiKey,
+        model: { id: process.env.CURSOR_PROJECT_NAME_MODEL ?? "composer-2" },
+      }),
+      timeoutPromise,
+    ])
     const run = await agent.send(buildProjectNamePrompt(context))
 
     return await Promise.race([
@@ -350,7 +358,7 @@ async function promptProjectNameWithXml(
     if (timeout) {
       clearTimeout(timeout)
     }
-    agent.close()
+    agent?.close()
   }
 }
 
@@ -855,7 +863,7 @@ function normalizeModelToken(value: string) {
 async function prepareSession(session: BuilderSession) {
   await fs.mkdir(session.projectPath, { recursive: true })
   await writeGeneratedApp(session.projectPath)
-  await runCommand("pnpm", ["install"], session)
+  await runCommand(packageManagerCommand, ["install"], session)
   await startDevServer(session)
 }
 
@@ -875,7 +883,7 @@ async function startDevServer(session: BuilderSession) {
   }
 
   const child = spawn(
-    "pnpm",
+    packageManagerCommand,
     [
       "exec",
       "vite",
@@ -888,7 +896,7 @@ async function startDevServer(session: BuilderSession) {
     {
       cwd: session.projectPath,
       env: { ...process.env, BROWSER: "none" },
-      shell: false,
+      shell: useShellForPnpm,
     }
   )
 
@@ -912,7 +920,7 @@ function runCommand(
     const child = spawn(command, args, {
       cwd: session.projectPath,
       env: { ...process.env, CI: "1" },
-      shell: false,
+      shell: useShellForPnpm,
     })
 
     pipeProcessLogs(child, session, command)
@@ -1002,11 +1010,10 @@ async function getOrCreateAgent(session: BuilderSession) {
   session.agent = await Agent.create({
     apiKey: session.apiKey,
     model: { id: process.env.CURSOR_MODEL ?? "composer-2" },
+    // BROWSER=none is set on the preview host's Vite spawn (see runCommand);
+    // LocalAgentOptions has no envVars field, that is a cloud-only option.
     local: {
       cwd: session.projectPath,
-      envVars: {
-        BROWSER: "none",
-      },
     },
   })
 
