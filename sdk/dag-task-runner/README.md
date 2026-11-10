@@ -52,7 +52,7 @@ CURSOR_API_KEY="crsr_..." \
   dev -- --dag examples/example_dag.json --canvas-path "$PWD/dag-example.canvas.tsx" --cwd "$PWD"
 ```
 
-Watch [`dag-example.canvas.tsx`](./examples/example_dag.json) refresh as each rank moves through:
+Watch `dag-example.canvas.tsx` refresh as each rank moves through:
 
 ```
 [dag-runner] DAG "Build a tiny CLI todo app" — 6 tasks across 4 rank(s)
@@ -186,7 +186,6 @@ sdk/dag-task-runner/
 ├── examples/
 │   └── example_dag.json          # 6-task "tiny CLI todo app" demo DAG
 ├── docs/
-│   ├── dag-canvas-preview.png    # canvas screenshot
 │   └── demo_vid_dag.gif          # animated canvas demo used in this README
 ├── skill/
 │   └── SKILL.md                  # source for the copyable skill instructions
@@ -199,4 +198,4 @@ sdk/dag-task-runner/
 - The runner uses the local Cursor SDK runtime — every subagent runs against `--cwd` (defaults to wherever you invoke the runner).
 - Sibling tasks in the same rank run in parallel; do not let them write the same files.
 - Per-task streamed text is capped at 4,000 chars and upstream context passed to children is capped at 2,000 chars per parent, to keep the canvas file modest.
-- For a deeper API tour, see the [Cursor SDK TypeScript docs](https://cursor.com/docs/api/sdk/typescript) and the sibling [Quickstart](../quickstart) example.
+- For a deeper API tour, see the [Cursor SDK TypeScript docs](https://cursor.com/docs/sdk/typescript) and the sibling [Quickstart](../quickstart) example.

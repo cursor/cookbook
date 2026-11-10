@@ -1,0 +1,107 @@
+name: Examples
+
+# Each SDK example is its own pnpm project with a committed lockfile. Two checks:
+#
+#   typecheck   on every PR and push to main: install from the lockfile and run
+#               the example's own typecheck (and lint where it has one), so a
+#               change to an example cannot land with a type error.
+#
+#   sdk-latest  weekly and on demand: same install, then bump @cursor/sdk to the
+#               latest published version and typecheck again. A failure here
+#               means the example no longer compiles against the SDK a new user
+#               installs today (the pins in the lockfiles are months behind),
+#               which is how sdk/coding-agent-cli broke when Agent.create became
+#               async. It is deliberately not a PR gate: it fails on upstream
+#               changes, not on the PR author's.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    name: typecheck ${{ matrix.dir }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dir: sdk/quickstart
+            check: pnpm typecheck
+          - dir: sdk/coding-agent-cli
+            check: pnpm typecheck
+          - dir: sdk/dag-task-runner
+            check: pnpm typecheck
+          - dir: sdk/agent-kanban
+            check: pnpm exec tsc --noEmit && pnpm lint
+          - dir: sdk/app-builder
+            check: pnpm exec tsc --noEmit && pnpm lint
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ${{ matrix.dir }}/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: ${{ matrix.dir }}/pnpm-lock.yaml
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Check
+        run: ${{ matrix.check }}
+
+  sdk-latest:
+    name: latest @cursor/sdk ${{ matrix.dir }}
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dir: sdk/quickstart
+            check: pnpm typecheck
+          - dir: sdk/coding-agent-cli
+            check: pnpm typecheck
+          - dir: sdk/dag-task-runner
+            check: pnpm typecheck
+          - dir: sdk/agent-kanban
+            check: pnpm exec tsc --noEmit
+          - dir: sdk/app-builder
+            check: pnpm exec tsc --noEmit
+    defaults:
+      run:
+        working-directory: ${{ matrix.dir }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: ${{ matrix.dir }}/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install at lockfile, then move @cursor/sdk to latest
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm add @cursor/sdk@latest
+          pnpm ls @cursor/sdk
+
+      - name: Check
+        run: ${{ matrix.check }}

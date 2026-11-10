@@ -19,6 +19,8 @@ Set an API key:
 export CURSOR_API_KEY="crsr_..."
 ```
 
+The default model is `composer-2`; override it with `CURSOR_MODEL` or the `--model` flag.
+
 Ask for a one-shot task in the current directory:
 
 ```bash
