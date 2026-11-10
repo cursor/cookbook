@@ -1004,9 +1004,6 @@ async function getOrCreateAgent(session: BuilderSession) {
     model: { id: process.env.CURSOR_MODEL ?? "composer-2" },
     local: {
       cwd: session.projectPath,
-      envVars: {
-        BROWSER: "none",
-      },
     },
   })
 
