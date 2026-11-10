@@ -138,7 +138,7 @@ Always use the link text `Open Canvas`. Use the absolute path in both the `file:
 Ensure `CURSOR_API_KEY` is set (the runner fails fast if missing), then launch:
 
 ```bash
-[ -n "$CURSOR_API_KEY" ] || { [ -f .env ] && set -a && source .env && set +a; }
+: "${CURSOR_API_KEY:?Set CURSOR_API_KEY in the environment before running the DAG runner.}"
 
 "$RUNNER_DIR/node_modules/.bin/tsx" "$RUNNER_DIR/run_dag.ts" \
   --dag /tmp/dag-<slug>.json \
@@ -180,16 +180,10 @@ Override any subset inline with top-level DAG `models`, or pass a reusable profi
 
 ## Auth
 
-The runner reads `CURSOR_API_KEY` from the environment. Set it however you usually manage secrets:
+The runner reads `CURSOR_API_KEY` from the environment. Set it with your usual secrets manager or export it explicitly:
 
 ```bash
 export CURSOR_API_KEY=crsr_...
-```
-
-If the current workspace has a `.env` containing it, source that first:
-
-```bash
-set -a && source .env && set +a
 ```
 
 ## CLI options
