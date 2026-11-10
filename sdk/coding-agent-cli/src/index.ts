@@ -29,9 +29,15 @@ async function main() {
     return
   }
 
-  const apiKey = process.env.CURSOR_API_KEY
+  const apiKey = process.env.CURSOR_API_KEY?.trim()
   if (!apiKey) {
     throw new Error("Set CURSOR_API_KEY before running the CLI.")
+  }
+
+  if (!apiKey.startsWith("crsr_")) {
+     console.warn(
+      "Warning: CURSOR_API_KEY has an unexpected format. Authentication may fail."
+    )
   }
 
   if (options.prompt) {
