@@ -4,3 +4,6 @@ packages:
 onlyBuiltDependencies:
   - esbuild
   - sqlite3
+
+publicHoistPattern:
+  - "@cursor/sdk-*"

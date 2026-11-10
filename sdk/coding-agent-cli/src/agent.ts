@@ -67,7 +67,9 @@ const AGENT_INSTRUCTIONS = [
 ].join("\n")
 
 export class CodingAgentSession {
-  private agent: SDKAgent
+  // Agent.create() is async since @cursor/sdk 1.0.x; keep the promise and
+  // await it at the call sites so the constructor can stay synchronous.
+  private agent: Promise<SDKAgent>
   private agentKey: string
   private cloudRepository: CloudRepository | null = null
   private currentRun: Run | null = null
@@ -141,7 +143,8 @@ export class CodingAgentSession {
   }
 
   async dispose() {
-    await this.agent[Symbol.asyncDispose]()
+    const agent = await this.agent
+    await agent[Symbol.asyncDispose]()
   }
 
   async cancelCurrentRun(): Promise<CancelRunResult> {
@@ -165,7 +168,8 @@ export class CodingAgentSession {
   async sendPrompt({ prompt, onEvent }: SendPromptOptions) {
     await this.ensureAgentFresh()
 
-    const run = await this.agent.send(buildPrompt(prompt), {
+    const agent = await this.agent
+    const run = await agent.send(buildPrompt(prompt), {
       ...(this.mode === "local" ? { model: this.modelSelection } : {}),
       ...(this.mode === "local" && this.force ? { local: { force: true } } : {}),
     })
@@ -228,7 +232,7 @@ export class CodingAgentSession {
   }
 
   private async replaceAgent() {
-    const previousAgent = this.agent
+    const previousAgent = await this.agent
     this.agent = this.createAgent()
     this.agentKey = this.currentAgentKey()
     await previousAgent[Symbol.asyncDispose]()
