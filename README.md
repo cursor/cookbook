@@ -1,4 +1,4 @@
-# Cursor Cookbook
+# Cursor Sciencebook
 
 This repo contains small examples for building with Cursor.
 
