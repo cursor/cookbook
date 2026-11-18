@@ -1999,8 +1999,9 @@ function formatParamValue(value: unknown): string {
   }
 
   if (Array.isArray(value)) {
-    const values = value.slice(0, 3).map(formatParamValue).filter(Boolean)
-    const hiddenCount = value.length - values.length
+    const shown = value.slice(0, 3)
+    const values = shown.map(formatParamValue).filter(Boolean)
+    const hiddenCount = value.length - shown.length
     const suffix = hiddenCount > 0 ? ` +${hiddenCount}` : ""
     return `[${values.join(", ")}${suffix}]`
   }
